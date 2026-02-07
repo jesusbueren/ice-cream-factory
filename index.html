@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ice Cream Factory | Profit Maximizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root { --primary: #2ecc71; --secondary: #3498db; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { max-width: 900px; width: 100%; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
+        
+        /* Controls */
+        .controls { background: #f1f4f7; padding: 20px; border-radius: 10px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; }
+        input[type="range"] { width: 100%; margin-bottom: 20px; }
+        
+        /* Stats */
+        .stat-box { text-align: center; padding: 15px; border-radius: 10px; background: #fff; border: 1px solid #eee; }
+        .big-val { font-size: 2em; font-weight: bold; color: var(--secondary); }
+        .profit-pos { color: #27ae60; }
+        .profit-neg { color: #e74c3c; }
+
+        /* Equations */
+        .math-display { font-size: 0.9em; color: #555; margin-top: 10px; text-align: center; }
+        
+        table { width: 100%; margin-top: 15px; border-collapse: collapse; }
+        td, th { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 style="margin:0;">🍦 The Ice Cream Factory</h1>
+    <p style="color: #666;">Adjust Capital and Labor to maximize your profits.</p>
+
+    <div class="math-display">
+        \(Y = A K^{\alpha} L^{1-\alpha}\) | Currently: \(A=100, \alpha=0.33, w=25, r=20\)
+    </div>
+
+    <div class="grid">
+        <div class="controls">
+            <label>Capital (\(K\)): <span id="kVal">10</span> Machines</label>
+            <input type="range" id="inputK" min="1" max="100" value="10">
+
+            <label>Labor (\(L\)): <span id="lVal">10</span> Workers</label>
+            <input type="range" id="inputL" min="1" max="100" value="10">
+            
+            <div class="stat-box" style="margin-top:20px;">
+                <div>Total Profit (\(\Pi\))</div>
+                <div id="profitDisplay" class="big-val">0</div>
+            </div>
+        </div>
+
+        <div class="charts">
+            <canvas id="compChart" height="200"></canvas>
+            
+            <table>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                    <th>Formula</th>
+                </tr>
+                <tr>
+                    <td>Labor Share</td>
+                    <td id="labShare">--</td>
+                    <td>\(wL / Y\)</td>
+                </tr>
+                <tr>
+                    <td>Capital Share</td>
+                    <td id="capShare">--</td>
+                    <td>\(rK / Y\)</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    
+    <button id="submitBtn" style="width:100%; margin-top:20px; padding:15px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
+        Lock in Production Plan
+    </button>
+</div>
+
+<script>
+    // Constants from your slides
+    const A = 100;
+    const alpha = 0.33; // 'a' in your slides
+    const w = 25;       // Wage
+    const r = 20;       // Rental rate
+
+    const inputK = document.getElementById('inputK');
+    const inputL = document.getElementById('inputL');
+    const profitDisplay = document.getElementById('profitDisplay');
+
+    let chart;
+
+    function calculate() {
+        const K = parseFloat(inputK.value);
+        const L = parseFloat(inputL.value);
+
+        document.getElementById('kVal').innerText = K;
+        document.getElementById('lVal').innerText = L;
+
+        // Cobb-Douglas: Y = A * K^a * L^(1-a)
+        const Y = A * Math.pow(K, alpha) * Math.pow(L, (1 - alpha));
+        
+        // Marginal Products
+        const MPK = alpha * (Y / K);
+        const MPL = (1 - alpha) * (Y / L);
+
+        // Profit
+        const profit = Y - (r * K) - (w * L);
+
+        // Shares
+        const laborShare = (w * L) / Y;
+        const capitalShare = (r * K) / Y;
+
+        // Update UI
+        profitDisplay.innerText = profit.toFixed(2);
+        profitDisplay.className = 'big-val ' + (profit >= 0 ? 'profit-pos' : 'profit-neg');
+        
+        document.getElementById('labShare').innerText = laborShare.toFixed(3);
+        document.getElementById('capShare').innerText = capitalShare.toFixed(3);
+
+        updateChart(MPL, MPK);
+    }
+
+    function initChart() {
+        const ctx = document.getElementById('compChart').getContext('2d');
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Labor (MPL vs w)', 'Capital (MPK vs r)'],
+                datasets: [
+                    { label: 'Marginal Product', data: [0, 0], backgroundColor: '#3498db' },
+                    { label: 'Factor Price', data: [w, r], backgroundColor: '#e74c3c' }
+                ]
+            },
+            options: {
+                scales: { y: { beginAtZero: true } },
+                plugins: { title: { display: true, text: 'Efficiency Check: MP = Price?' } }
+            }
+        });
+    }
+
+    function updateChart(mpl, mpk) {
+        chart.data.datasets[0].data = [mpl.toFixed(2), mpk.toFixed(2)];
+        chart.update();
+    }
+
+    [inputK, inputL].forEach(el => el.addEventListener('input', calculate));
+    
+    window.onload = () => {
+        initChart();
+        calculate();
+    };
+</script>
+</body>
+</html>
