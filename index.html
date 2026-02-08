@@ -2,139 +2,175 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>General Equilibrium: Factor Markets</title>
+    <title>Macro Factor Market Simulator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; padding: 20px; }
-        .wrapper { max-width: 1100px; margin: auto; display: flex; flex-direction: column; gap: 20px; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 25px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; background: #0f172a; color: white; padding: 20px; border-radius: 12px; }
-        .slider-box { display: flex; flex-direction: column; gap: 10px; }
-        input[type=range] { width: 100%; accent-color: #3b82f6; }
-        .metric { font-size: 0.85em; font-weight: bold; padding: 10px; border-radius: 6px; text-align: center; }
-        .surplus { background: #fee2e2; color: #991b1b; }
-        .shortage { background: #dcfce7; color: #166534; }
-        .equilibrium { background: #dbeafe; color: #1e40af; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        
+        /* Top Control Bar */
+        .params-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; background: #2c3e50; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        
+        /* Price Control Bar */
+        .price-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 15px; border: 2px solid #3498db; border-radius: 10px; margin-bottom: 20px; }
+        
+        .slider-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-weight: bold; font-size: 0.9em; }
+        input[type=range] { cursor: pointer; }
+
+        /* Income Shares Box */
+        .shares-container { display: flex; justify-content: space-around; margin-bottom: 20px; gap: 15px; }
+        .share-card { flex: 1; text-align: center; padding: 15px; border-radius: 8px; color: white; font-weight: bold; }
+        .labor-bg { background: #27ae60; }
+        .capital-bg { background: #2980b9; }
+
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .chart-wrap { position: relative; height: 350px; }
+        
+        .formula { font-family: "Times New Roman", Times, serif; font-style: italic; }
     </style>
 </head>
 <body>
 
-<div class="wrapper">
-    <div class="card">
-        <h2 style="margin-top:0">Factor Market Equilibrium</h2>
-        <p>Adjust the market prices (\(w\) and \(r\)) to find the intersection where supply equals demand.</p>
+<div class="container">
+    <h2>Factor Market Equilibrium & Income Distribution</h2>
+    
+    <div class="params-bar">
+        <div class="slider-group">
+            <label>Capital Endowment (<span class="formula">K̄</span>): <span id="valKbar">50</span></label>
+            <input type="range" id="paramK" min="10" max="100" value="50">
+        </div>
+        <div class="slider-group">
+            <label>Labor Endowment (<span class="formula">L̄</span>): <span id="valLbar">80</span></label>
+            <input type="range" id="paramL" min="10" max="100" value="80">
+        </div>
+        <div class="slider-group">
+            <label>Capital Share (<span class="formula">α</span>): <span id="valAlpha">0.30</span></label>
+            <input type="range" id="paramAlpha" min="0.1" max="0.9" step="0.05" value="0.3">
+        </div>
     </div>
 
-    <div class="controls">
-        <div class="slider-box">
-            <label>Market Wage (\(w\)): <span id="wLabel">30</span></label>
-            <input type="range" id="wSlider" min="10" max="80" value="50">
-            <div id="lStatus" class="metric">Calculating...</div>
+    <div class="shares-container">
+        <div class="share-card labor-bg">
+            Labor Income Share (wL / Y): <span id="shareL">--</span>
         </div>
-        <div class="slider-box">
-            <label>Rental Rate (\(r\)): <span id="rLabel">15</span></label>
-            <input type="range" id="rSlider" min="5" max="50" value="25">
-            <div id="kStatus" class="metric">Calculating...</div>
+        <div class="share-card capital-bg">
+            Capital Income Share (rK / Y): <span id="shareK">--</span>
         </div>
     </div>
 
-    <div class="grid">
-        <div class="card">
-            <canvas id="laborChart"></canvas>
-            <p style="text-align:center; font-size:0.8em"><b>Labor Market</b>: Supply (\(\bar{L}=80\))</p>
+    <div class="price-bar">
+        <div class="slider-group">
+            <label>Market Real Wage (<span class="formula">w</span>): <span id="valW">40</span></label>
+            <input type="range" id="priceW" min="5" max="100" value="43">
         </div>
-        <div class="card">
-            <canvas id="capitalChart"></canvas>
-            <p style="text-align:center; font-size:0.8em"><b>Capital Market</b>: Supply (\(\bar{K}=50\))</p>
+        <div class="slider-group">
+            <label>Market Rental Rate (<span class="formula">r</span>): <span id="valR">15</span></label>
+            <input type="range" id="priceR" min="5" max="50" value="18">
         </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-wrap"><canvas id="laborChart"></canvas></div>
+        <div class="chart-wrap"><canvas id="capitalChart"></canvas></div>
     </div>
 </div>
 
 <script>
-    // Constants
-    const A = 100, alpha = 0.3, K_bar = 50, L_bar = 80;
-    
-    // Equilibrium Theoretical Values
-    const w_star = (1 - alpha) * A * Math.pow(K_bar, alpha) * Math.pow(L_bar, -alpha);
-    const r_star = alpha * A * Math.pow(K_bar, alpha - 1) * Math.pow(L_bar, 1 - alpha);
+    const A = 100;
+    let laborChart, capitalChart;
 
-    // Chart Helper
-    function createChart(id, labelY, maxVal) {
-        return new Chart(document.getElementById(id), {
+    const els = {
+        K: document.getElementById('paramK'),
+        L: document.getElementById('paramL'),
+        A: document.getElementById('paramAlpha'),
+        W: document.getElementById('priceW'),
+        R: document.getElementById('priceR'),
+        dispK: document.getElementById('valKbar'),
+        dispL: document.getElementById('valLbar'),
+        dispA: document.getElementById('valAlpha'),
+        dispW: document.getElementById('valW'),
+        dispR: document.getElementById('valR'),
+        shareL: document.getElementById('shareL'),
+        shareK: document.getElementById('shareK')
+    };
+
+    function init() {
+        const config = (title, max) => ({
             type: 'line',
             data: {
                 labels: Array.from({length: 101}, (_, i) => i),
                 datasets: [
-                    { label: 'Demand (MP)', data: [], borderColor: '#3b82f6', tension: 0.3, pointRadius: 0 },
-                    { label: 'Supply', data: [], borderColor: '#64748b', borderDash: [5,5], pointRadius: 0 },
-                    { label: 'Market Price', data: [], borderColor: '#ef4444', borderWidth: 2, pointRadius: 0 }
+                    { label: 'Demand (MP)', data: [], borderColor: '#3498db', pointRadius: 0, tension: 0.2 },
+                    { label: 'Supply (Fixed)', data: [], borderColor: '#2c3e50', borderDash: [5,5], pointRadius: 0 },
+                    { label: 'Market Price', data: [], borderColor: '#e74c3c', borderWidth: 2, pointRadius: 0 }
                 ]
             },
             options: { 
+                responsive: true, maintainAspectRatio: false, 
                 animation: false,
-                scales: { y: { min: 0, max: maxVal }, x: { title: { display: true, text: 'Quantity' } } }
+                scales: { y: { min: 0, max: max }, x: { title: { display: true, text: title } } }
             }
         });
+
+        laborChart = new Chart(document.getElementById('laborChart'), config('Quantity of Labor', 120));
+        capitalChart = new Chart(document.getElementById('capitalChart'), config('Quantity of Capital', 60));
+        update();
     }
 
-    const laborChart = createChart('laborChart', 'Wage', 120);
-    const capitalChart = createChart('capitalChart', 'Rent', 60);
-
     function update() {
-        const w = parseFloat(document.getElementById('wSlider').value);
-        const r = parseFloat(document.getElementById('rSlider').value);
-        document.getElementById('wLabel').innerText = w;
-        document.getElementById('rLabel').innerText = r;
+        const K_bar = parseFloat(els.K.value);
+        const L_bar = parseFloat(els.L.value);
+        const alpha = parseFloat(els.A.value);
+        const w = parseFloat(els.W.value);
+        const r = parseFloat(els.R.value);
 
-        // Data arrays
-        const mplData = [], mpkData = [], wLine = [], rLine = [], lSupply = [], kSupply = [];
+        els.dispK.innerText = K_bar;
+        els.dispL.innerText = L_bar;
+        els.dispA.innerText = alpha.toFixed(2);
+        els.dispW.innerText = w;
+        els.dispR.innerText = r;
 
-        for (let i = 0; i <= 100; i++) {
+        // 1. Calculate Production and Shares
+        const Y = A * Math.pow(K_bar, alpha) * Math.pow(L_bar, 1 - alpha);
+        const eqW = (1 - alpha) * A * Math.pow(K_bar, alpha) * Math.pow(L_bar, -alpha);
+        const eqR = alpha * A * Math.pow(K_bar, alpha - 1) * Math.pow(L_bar, 1 - alpha);
+
+        // Calculate shares based on MARKET prices vs Output
+        // Note: In strict equilibrium w=eqW and r=eqR, so shares are (1-alpha) and alpha.
+        // If prices are disequilibrium, we show the current income ratio.
+        const labShare = (w * L_bar / Y) * 100;
+        const capShare = (r * K_bar / Y) * 100;
+        
+        els.shareL.innerText = labShare.toFixed(1) + "%";
+        els.shareK.innerText = capShare.toFixed(1) + "%";
+
+        // 2. Generate Graph Data
+        const mplData = [], mpkData = [], wLine = [], rLine = [];
+        for (let i = 1; i <= 100; i++) {
             mplData.push((1 - alpha) * A * Math.pow(K_bar, alpha) * Math.pow(i, -alpha));
             mpkData.push(alpha * A * Math.pow(i, alpha - 1) * Math.pow(L_bar, 1 - alpha));
             wLine.push(w);
             rLine.push(r);
-            lSupply.push(i === L_bar ? 120 : null);
-            kSupply.push(i === K_bar ? 60 : null);
         }
 
-        // Update Labor Chart
+        // 3. Update Labor Chart
         laborChart.data.datasets[0].data = mplData;
-        laborChart.data.datasets[1].data = Array(101).fill(null).map((_, i) => i === L_bar ? {x: L_bar, y: 0} : null); // Custom logic for vertical line
-        laborChart.data.datasets[1].data = [{x: L_bar, y: 0}, {x: L_bar, y: 120}];
+        laborChart.data.datasets[1].data = [{x: L_bar, y: 0}, {x: L_bar, y: 120}]; // Vertical
         laborChart.data.datasets[1].type = 'scatter'; laborChart.data.datasets[1].showLine = true;
         laborChart.data.datasets[2].data = wLine;
         laborChart.update();
 
-        // Update Capital Chart
+        // 4. Update Capital Chart
         capitalChart.data.datasets[0].data = mpkData;
-        capitalChart.data.datasets[1].data = [{x: K_bar, y: 0}, {x: K_bar, y: 60}];
+        capitalChart.data.datasets[1].data = [{x: K_bar, y: 0}, {x: K_bar, y: 60}]; // Vertical
         capitalChart.data.datasets[1].type = 'scatter'; capitalChart.data.datasets[1].showLine = true;
         capitalChart.data.datasets[2].data = rLine;
         capitalChart.update();
-
-        // Status Logic
-        const updateStatus = (id, current, star, name) => {
-            const el = document.getElementById(id);
-            if (Math.abs(current - star) < 2) {
-                el.innerText = `Equilibrium! ${name} cleared.`;
-                el.className = 'metric equilibrium';
-            } else if (current > star) {
-                el.innerText = `Excess Supply (Price too high)`;
-                el.className = 'metric surplus';
-            } else {
-                el.innerText = `Excess Demand (Price too low)`;
-                el.className = 'metric shortage';
-            }
-        };
-
-        updateStatus('lStatus', w, w_star, 'Labor');
-        updateStatus('kStatus', r, r_star, 'Capital');
     }
 
-    document.querySelectorAll('input').forEach(i => i.addEventListener('input', update));
-    update();
+    [els.K, els.L, els.A, els.W, els.R].forEach(input => input.addEventListener('input', update));
+    window.onload = init;
 </script>
 </body>
 </html>
