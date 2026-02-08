@@ -2,149 +2,144 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Ice Cream Factory: Professional Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scoop-Master 3000: Industrial Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
+        
+        * { box-sizing: border-box; }
         
         body { 
-            font-family: 'Outfit', sans-serif; 
-            background: #f0f2f5; 
-            margin: 0; padding: 20px; 
-            display: flex; justify-content: center;
+            font-family: 'Space Grotesk', sans-serif; 
+            background: #f8f9fa; margin: 0; padding: 20px;
+            display: flex; justify-content: center; overflow-x: hidden;
         }
 
-        .factory-box { 
+        /* Fixed-width container prevents "growing to the right" */
+        .app-container { 
             width: 1000px; 
-            background: white; 
-            border-radius: 20px; 
-            padding: 25px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            border-top: 10px solid #ff8787; /* Strawberry top */
+            max-width: 1000px;
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 30px;
+            border: 4px solid #333;
+            box-shadow: 12px 12px 0px #ff8787;
         }
 
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { margin: 0; color: #4b3621; text-transform: uppercase; letter-spacing: 1px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-weight: 800; color: #333; text-transform: uppercase; letter-spacing: -1px; }
 
-        /* Fixed Grid Layout */
-        .dashboard-grid { 
-            display: grid; 
-            grid-template-columns: 350px 1fr; 
-            gap: 25px; 
-        }
+        .main-layout { display: grid; grid-template-columns: 320px 1fr; gap: 30px; }
 
-        /* Sidebar Controls */
-        .controls { 
-            display: flex; flex-direction: column; gap: 15px; 
-            background: #fff5f5; padding: 20px; border-radius: 15px;
-        }
-        .slider-group { margin-bottom: 10px; }
-        .slider-group label { 
+        /* Left Sidebar Controls */
+        .sidebar { background: #fff5f5; padding: 20px; border-radius: 16px; border: 2px solid #333; }
+        .control-group { margin-bottom: 20px; }
+        .control-group label { 
             display: flex; justify-content: space-between; 
-            font-size: 0.85rem; font-weight: 700; color: #4b3621; margin-bottom: 5px;
+            font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; 
         }
-        input[type=range] { width: 100%; cursor: pointer; accent-color: #ff8787; }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: #333; }
 
-        .price-section { 
-            border-top: 2px dashed #ffc9c9; 
-            padding-top: 15px; margin-top: 5px;
+        .price-zone { 
+            border-top: 2px solid #333; padding-top: 20px; margin-top: 20px; 
+            background: #e3fafc; margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px;
         }
 
-        /* Chart Area */
-        .chart-grid { display: grid; grid-template-rows: 1fr 1fr; gap: 20px; }
-        .chart-wrapper { 
+        /* Right Side Charts */
+        .chart-stack { display: flex; flex-direction: column; gap: 20px; }
+        .chart-box { 
+            height: 280px; 
+            width: 100%; 
             position: relative; 
-            height: 250px; /* FIXED HEIGHT TO PREVENT GROWING */
-            width: 100%;
-            background: white;
-            border: 1px solid #eee;
-            border-radius: 10px;
+            border: 2px solid #eee; 
+            border-radius: 12px;
             padding: 10px;
         }
-        .chart-label {
-            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            font-weight: 700; font-size: 0.8rem; color: #888; z-index: 10;
+        .chart-title { 
+            font-weight: 800; font-size: 0.75rem; color: #adb5bd; 
+            text-transform: uppercase; margin-bottom: 5px; text-align: center;
         }
 
-        /* Stats */
-        .stats { 
-            display: grid; grid-template-columns: repeat(3, 1fr); 
-            gap: 15px; margin-top: 20px; 
+        /* Bottom Stats Bar */
+        .stats-bar { 
+            display: grid; grid-template-columns: repeat(4, 1fr); 
+            gap: 15px; margin-top: 30px; 
         }
-        .stat-item { 
-            background: #f8f9fa; padding: 15px; border-radius: 12px; text-align: center;
-            border-bottom: 4px solid #dee2e6;
+        .stat-card { 
+            background: #333; color: white; padding: 15px; 
+            border-radius: 12px; text-align: center; 
         }
-        .stat-item.active { border-color: #51cf66; color: #2b8a3e; }
-        .stat-item.error { border-color: #ff6b6b; color: #c92a2a; }
-        .stat-val { font-size: 1.2rem; font-weight: 700; display: block; }
-        .stat-name { font-size: 0.7rem; text-transform: uppercase; color: #adb5bd; }
+        .stat-card small { display: block; font-size: 0.65rem; text-transform: uppercase; opacity: 0.7; }
+        .stat-card span { font-size: 1.2rem; font-weight: 700; }
+        
+        .status-badge { grid-column: span 4; padding: 10px; border-radius: 8px; text-align: center; font-weight: 800; }
     </style>
 </head>
 <body>
 
-<div class="factory-box">
+<div class="app-container">
     <div class="header">
-        <h1>Scoop-Master General Equilibrium</h1>
+        <h1>🍨 Ice Cream Factory OS</h1>
     </div>
 
-    <div class="dashboard-grid">
-        <div class="controls">
-            <div class="slider-group">
-                <label>Machines (K̄) <span id="vK">50</span></label>
+    <div class="main-layout">
+        <div class="sidebar">
+            <div class="control-group">
+                <label>Machines (K) <span id="valK">50</span></label>
                 <input type="range" id="Kbar" min="10" max="100" value="50">
             </div>
-            <div class="slider-group">
-                <label>Scoopers (L̄) <span id="vL">80</span></label>
+            <div class="control-group">
+                <label>Scoopers (L) <span id="valL">80</span></label>
                 <input type="range" id="Lbar" min="10" max="100" value="80">
             </div>
-            <div class="slider-group">
-                <label>Alpha (α) <span id="vA">0.30</span></label>
-                <input type="range" id="Alpha" min="0.1" max="0.9" step="0.05" value="0.3">
+            <div class="control-group">
+                <label>Tech Alpha (α) <span id="valA">0.30</span></label>
+                <input type="range" id="Alpha" min="0.1" max="0.9" step="0.05" value="0.30">
             </div>
 
-            <div class="price-section">
-                <div class="slider-group">
-                    <label style="color:#d9480f">Wage (w) <span id="vW">40</span></label>
+            <div class="price-zone">
+                <div class="control-group">
+                    <label style="color:#e03131">Wage (w) <span id="valW">40</span></label>
                     <input type="range" id="Wage" min="10" max="150" value="40">
                 </div>
-                <div class="slider-group">
-                    <label style="color:#087f5b">Rent (r) <span id="vR">20</span></label>
+                <div class="control-group">
+                    <label style="color:#099268">Machine Rent (r) <span id="valR">20</span></label>
                     <input type="range" id="Rent" min="5" max="100" value="20">
                 </div>
             </div>
-
-            <div id="status" class="stat-item" style="margin-top:10px;">
-                <span class="stat-name">Market Status</span>
-                <span id="vStatus" class="stat-val">---</span>
-            </div>
         </div>
 
-        <div class="chart-grid">
-            <div class="chart-wrapper">
-                <div class="chart-label">Labor Market: MPL = (1-α)A(K/L)<sup>α</sup></div>
+        <div class="chart-stack">
+            <div class="chart-box">
+                <div class="chart-title">Factor Market: Scoopers (L)</div>
                 <canvas id="chartL"></canvas>
             </div>
-            <div class="chart-wrapper">
-                <div class="chart-label">Capital Market: MPK = αA(L/K)<sup>1-α</sup></div>
+            <div class="chart-box">
+                <div class="chart-title">Factor Market: Machines (K)</div>
                 <canvas id="chartK"></canvas>
             </div>
         </div>
     </div>
 
-    <div class="stats">
-        <div class="stat-item">
-            <span class="stat-name">Total Gallons (Y)</span>
-            <span id="vY" class="stat-val">0</span>
+    <div class="stats-bar">
+        <div class="stat-card">
+            <small>Total Gallons (Y)</small>
+            <span id="statY">0</span>
         </div>
-        <div class="stat-item">
-            <span class="stat-name">Labor Share (wL/Y)</span>
-            <span id="vLS" class="stat-val">0%</span>
+        <div class="stat-card">
+            <small>Wage / MPL</small>
+            <span id="statW_Ratio">0.0</span>
         </div>
-        <div class="stat-item">
-            <span class="stat-name">Capital Share (rK/Y)</span>
-            <span id="vKS" class="stat-val">0%</span>
+        <div class="stat-card">
+            <small>Rent / MPK</small>
+            <span id="statR_Ratio">0.0</span>
         </div>
+        <div class="stat-card">
+            <small>Labor Share</small>
+            <span id="statLS">0%</span>
+        </div>
+        <div id="statusMsg" class="status-badge">Checking Factory Equilibrium...</div>
     </div>
 </div>
 
@@ -152,29 +147,30 @@
     const A = 100;
     let chartL, chartK;
 
-    function initCharts() {
-        const baseCfg = (color) => ({
+    function init() {
+        const config = (color) => ({
             type: 'line',
             data: {
-                labels: Array.from({length: 100}, (_, i) => i + 1),
                 datasets: [
-                    { label: 'MP', data: [], borderColor: color, borderWidth: 3, pointRadius: 0, tension: 0.2 },
-                    { label: 'Supply', data: [], borderColor: '#4b3621', borderDash: [5,5], pointRadius: 0, showLine: true },
-                    { label: 'Price', data: [], borderColor: '#fab005', borderWidth: 2, pointRadius: 0 }
+                    { label: 'Marginal Product', data: [], borderColor: color, borderWidth: 4, pointRadius: 0, tension: 0.1 },
+                    { label: 'Factory Capacity', data: [], borderColor: '#333', borderDash: [6,3], pointRadius: 0, borderWidth: 2 },
+                    { label: 'Market Price', data: [], borderColor: '#fab005', borderWidth: 3, pointRadius: 0 }
                 ]
             },
             options: {
-                responsive: true, maintainAspectRatio: false, animation: false,
+                responsive: true,
+                maintainAspectRatio: false, // Key to stability
+                animation: false,
                 plugins: { legend: { display: false } },
-                scales: { 
-                    x: { type: 'linear', min: 0, max: 100 },
-                    y: { beginAtZero: true }
+                scales: {
+                    x: { type: 'linear', min: 0, max: 100, grid: { display: false } },
+                    y: { beginAtZero: true, max: 160 }
                 }
             }
         });
 
-        chartL = new Chart(document.getElementById('chartL'), baseCfg('#ff6b6b'));
-        chartK = new Chart(document.getElementById('chartK'), baseCfg('#51cf66'));
+        chartL = new Chart(document.getElementById('chartL').getContext('2d'), config('#ff8787'));
+        chartK = new Chart(document.getElementById('chartK').getContext('2d'), config('#63e6be'));
         update();
     }
 
@@ -185,50 +181,51 @@
         const w = parseFloat(document.getElementById('Wage').value);
         const r = parseFloat(document.getElementById('Rent').value);
 
-        document.getElementById('vK').innerText = K;
-        document.getElementById('vL').innerText = L;
-        document.getElementById('vA').innerText = a.toFixed(2);
-        document.getElementById('vW').innerText = w;
-        document.getElementById('vR').innerText = r;
+        document.getElementById('valK').innerText = K;
+        document.getElementById('valL').innerText = L;
+        document.getElementById('valA').innerText = a.toFixed(2);
+        document.getElementById('valW').innerText = w;
+        document.getElementById('valR').innerText = r;
 
         const Y = A * Math.pow(K, a) * Math.pow(L, 1-a);
-        const eqW = (1-a) * A * Math.pow(K, a) * Math.pow(L, -a);
-        const eqR = a * A * Math.pow(K, a-1) * Math.pow(L, 1-a);
+        const MPL = (1-a) * A * Math.pow(K/L, a);
+        const MPK = a * A * Math.pow(L/K, 1-a);
 
-        // Update Stats
-        document.getElementById('vY').innerText = Math.round(Y).toLocaleString();
-        document.getElementById('vLS').innerText = ((w * L / Y) * 100).toFixed(1) + "%";
-        document.getElementById('vKS').innerText = ((r * K / Y) * 100).toFixed(1) + "%";
+        // Stats Update
+        document.getElementById('statY').innerText = Math.round(Y).toLocaleString();
+        document.getElementById('statW_Ratio').innerText = (w/MPL).toFixed(2);
+        document.getElementById('statR_Ratio').innerText = (r/MPK).toFixed(2);
+        document.getElementById('statLS').innerText = ((w * L / Y) * 100).toFixed(0) + "%";
 
-        const isEquil = Math.abs(w-eqW) < 4 && Math.abs(r-eqR) < 3;
-        const statusEl = document.getElementById('status');
-        document.getElementById('vStatus').innerText = isEquil ? "EQUILIBRIUM" : "DISEQUILIBRIUM";
-        statusEl.className = isEquil ? "stat-item active" : "stat-item error";
+        // Equilibrium Check
+        const isEquil = Math.abs(w-MPL) < 3 && Math.abs(r-MPK) < 2;
+        const badge = document.getElementById('statusMsg');
+        badge.innerText = isEquil ? "✅ PRODUCTION IS OPTIMIZED (MP = PRICE)" : "❌ MARKET DISEQUILIBRIUM: ADJUST PRICES";
+        badge.style.background = isEquil ? "#d3f9d8" : "#fff0f0";
+        badge.style.color = isEquil ? "#2b8a3e" : "#c92a2a";
 
         // Generate Chart Data
-        let dL = [], dK = [];
+        let dataL = [], dataK = [];
         for(let i=1; i<=100; i++) {
-            dL.push({x: i, y: (1-a) * A * Math.pow(K, a) * Math.pow(i, -a)});
-            dK.push({x: i, y: a * A * Math.pow(i, a-1) * Math.pow(L, 1-a)});
+            dataL.push({x: i, y: (1-a) * A * Math.pow(K, a) * Math.pow(i, -a)});
+            dataK.push({x: i, y: a * A * Math.pow(i, a-1) * Math.pow(L, 1-a)});
         }
 
-        // Labor Chart Update
-        chartL.data.datasets[0].data = dL;
-        chartL.data.datasets[1].data = [{x: L, y: 0}, {x: L, y: 200}]; // High Y to ensure it hits top
+        // Apply to L Chart
+        chartL.data.datasets[0].data = dataL;
+        chartL.data.datasets[1].data = [{x: L, y: 0}, {x: L, y: 160}]; // Supply line to top
         chartL.data.datasets[2].data = [{x: 0, y: w}, {x: 100, y: w}];
-        chartL.options.scales.y.max = 160; 
         chartL.update();
 
-        // Capital Chart Update
-        chartK.data.datasets[0].data = dK;
-        chartK.data.datasets[1].data = [{x: K, y: 0}, {x: K, y: 200}];
+        // Apply to K Chart
+        chartK.data.datasets[0].data = dataK;
+        chartK.data.datasets[1].data = [{x: K, y: 0}, {x: K, y: 160}]; // Supply line to top
         chartK.data.datasets[2].data = [{x: 0, y: r}, {x: 100, y: r}];
-        chartK.options.scales.y.max = 100;
         chartK.update();
     }
 
     document.querySelectorAll('input').forEach(i => i.addEventListener('input', update));
-    window.onload = initCharts;
+    window.onload = init;
 </script>
 </body>
 </html>
