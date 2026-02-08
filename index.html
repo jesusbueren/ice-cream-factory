@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scoop-Master 3000: Clear View</title>
+    <title>Scoop-Master 3000: Equilibrium Status</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
@@ -54,12 +54,11 @@
             background: #fff;
         }
 
-        /* FIXED: Lowered Equation Overlay */
         .eq-overlay {
             position: absolute;
-            top: 50px; /* Moved down from 15px to clear the title */
+            top: 50px; 
             right: 20px;
-            background: rgba(255, 255, 255, 0.85); /* Slightly translucent */
+            background: rgba(255, 255, 255, 0.85); 
             padding: 6px 10px;
             border-radius: 6px;
             border: 1px solid #4b3621;
@@ -69,7 +68,6 @@
             color: #4b3621;
             pointer-events: none;
             z-index: 10;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
         }
 
         .stats-bar { 
@@ -83,14 +81,25 @@
         .stat-card small { display: block; font-size: 0.6rem; text-transform: uppercase; opacity: 0.8; }
         .stat-card span { font-size: 1.1rem; font-weight: 700; }
         
-        .status-badge { grid-column: span 4; padding: 12px; border-radius: 8px; text-align: center; font-weight: 800; border: 2px solid #4b3621; }
+        .status-badge { 
+            grid-column: span 4; 
+            padding: 15px; 
+            border-radius: 12px; 
+            text-align: center; 
+            font-weight: 900; 
+            font-size: 1.2rem;
+            border: 3px solid #4b3621;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+        }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">
-        <h1>🍦 Scoop-Master Equations</h1>
+        <h1>🍦 Scoop-Master Simulator</h1>
     </div>
 
     <div class="main-layout">
@@ -104,17 +113,17 @@
                 <input type="range" id="Lbar" min="10" max="100" value="80">
             </div>
             <div class="control-group">
-                <label>Flavor Alpha (α) <span id="valA">0.30</span></label>
+                <label>Technology (α) <span id="valA">0.30</span></label>
                 <input type="range" id="Alpha" min="0.1" max="0.9" step="0.05" value="0.30">
             </div>
 
             <div class="price-zone">
                 <div class="control-group">
-                    <label style="color:#d9480f">Labor Wage (w) <span id="valW">40</span></label>
+                    <label style="color:#d9480f">Wage (w) <span id="valW">40</span></label>
                     <input type="range" id="Wage" min="10" max="150" value="40">
                 </div>
                 <div class="control-group">
-                    <label style="color:#087f5b">Machine Rent (r) <span id="valR">20</span></label>
+                    <label style="color:#087f5b">Rent (r) <span id="valR">20</span></label>
                     <input type="range" id="Rent" min="5" max="100" value="20">
                 </div>
             </div>
@@ -134,22 +143,22 @@
 
     <div class="stats-bar">
         <div class="stat-card">
-            <small>Total Gallons (Y)</small>
+            <small>Total Production (Y)</small>
             <span id="statY">0</span>
         </div>
         <div class="stat-card">
-            <small>Worker Share</small>
+            <small>Labor Share</small>
             <span id="statLS">0%</span>
         </div>
         <div class="stat-card">
-            <small>Owner Share</small>
+            <small>Capital Share</small>
             <span id="statKS">0%</span>
         </div>
         <div class="stat-card">
-            <small>Efficiency (A)</small>
+            <small>Total A</small>
             <span>100</span>
         </div>
-        <div id="statusMsg" class="status-badge">System Initializing...</div>
+        <div id="statusMsg" class="status-badge">Calculating Market Forces...</div>
     </div>
 </div>
 
@@ -177,8 +186,8 @@
             }
         });
 
-        chartL = new Chart(document.getElementById('chartL'), config('Labor Market: Marginal Product of Labor', '#ff8787'));
-        chartK = new Chart(document.getElementById('chartK'), config('Capital Market: Marginal Product of Capital', '#63e6be'));
+        chartL = new Chart(document.getElementById('chartL'), config('Marginal Product of Labor (MPL)', '#ff8787'));
+        chartK = new Chart(document.getElementById('chartK'), config('Marginal Product of Capital (MPK)', '#63e6be'));
         update();
     }
 
@@ -189,14 +198,12 @@
         const w = parseFloat(document.getElementById('Wage').value);
         const r = parseFloat(document.getElementById('Rent').value);
 
-        // Update UI
         document.getElementById('valK').innerText = K;
         document.getElementById('valL').innerText = L;
         document.getElementById('valA').innerText = a.toFixed(2);
         document.getElementById('valW').innerText = w;
         document.getElementById('valR').innerText = r;
 
-        // Dynamic Equations - Formatted for readability
         document.getElementById('eqL').innerHTML = `MPL = (1-${a}) * 100 * (K/L)<sup>${a}</sup>`;
         document.getElementById('eqK').innerHTML = `MPK = ${a} * 100 * (L/K)<sup>${(1-a).toFixed(2)}</sup>`;
 
@@ -208,13 +215,22 @@
         document.getElementById('statLS').innerText = ((w * L / Y) * 100).toFixed(0) + "%";
         document.getElementById('statKS').innerText = ((r * K / Y) * 100).toFixed(0) + "%";
 
+        // EQUILIBRIUM STATUS LOGIC
         const isEquil = Math.abs(w-MPL) < 3 && Math.abs(r-MPK) < 2;
         const badge = document.getElementById('statusMsg');
-        badge.innerText = isEquil ? "✅ FACTORY OPTIMIZED" : "❌ PRICE MISMATCH";
-        badge.style.background = isEquil ? "#ebfbee" : "#fff5f5";
-        badge.style.color = isEquil ? "#2b8a3e" : "#c92a2a";
+        
+        if (isEquil) {
+            badge.innerText = "Equilibrium Reached";
+            badge.style.background = "#d3f9d8"; // Light green
+            badge.style.color = "#2b8a3e";      // Dark green
+            badge.style.borderColor = "#2b8a3e";
+        } else {
+            badge.innerText = "Economy Not In Equilibrium";
+            badge.style.background = "#fff5f5"; // Light red
+            badge.style.color = "#c92a2a";      // Dark red
+            badge.style.borderColor = "#c92a2a";
+        }
 
-        // Plotting
         let dL = [], dK = [];
         for(let i=1; i<=100; i++) {
             dL.push({x: i, y: (1-a) * A * Math.pow(K, a) * Math.pow(i, -a)});
