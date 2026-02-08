@@ -2,175 +2,208 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Macro Factor Market Simulator</title>
+    <title>Production Theory: 3D Equilibrium</title>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #2c3e50; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         
-        /* Top Control Bar */
-        .params-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; background: #2c3e50; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        /* Layout */
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .main-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; }
+        .controls-panel { display: flex; flex-direction: column; gap: 15px; }
+        .charts-panel { display: flex; flex-direction: column; gap: 20px; }
         
-        /* Price Control Bar */
-        .price-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 15px; border: 2px solid #3498db; border-radius: 10px; margin-bottom: 20px; }
+        /* Sliders & Stats */
+        .control-card { background: #2c3e50; color: white; padding: 15px; border-radius: 10px; }
+        .slider-row { margin-bottom: 10px; }
+        .slider-row label { display: block; font-size: 0.85em; margin-bottom: 5px; color: #bdc3c7; }
+        input[type=range] { width: 100%; accent-color: #3498db; }
         
-        .slider-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-weight: bold; font-size: 0.9em; }
-        input[type=range] { cursor: pointer; }
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .stat-box { background: #34495e; padding: 10px; border-radius: 6px; text-align: center; }
+        .stat-label { font-size: 0.75em; color: #bdc3c7; display: block; }
+        .stat-val { font-size: 1.1em; font-weight: bold; color: #2ecc71; }
 
-        /* Income Shares Box */
-        .shares-container { display: flex; justify-content: space-around; margin-bottom: 20px; gap: 15px; }
-        .share-card { flex: 1; text-align: center; padding: 15px; border-radius: 8px; color: white; font-weight: bold; }
-        .labor-bg { background: #27ae60; }
-        .capital-bg { background: #2980b9; }
-
-        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .chart-wrap { position: relative; height: 350px; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        #plot3d { width: 100%; height: 450px; background: #fff; border-radius: 10px; border: 1px solid #eee; }
         
-        .formula { font-family: "Times New Roman", Times, serif; font-style: italic; }
+        .equation-label { font-family: "serif"; font-style: italic; font-size: 0.9em; color: #3498db; text-align: center; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Factor Market Equilibrium & Income Distribution</h2>
-    
-    <div class="params-bar">
-        <div class="slider-group">
-            <label>Capital Endowment (<span class="formula">K̄</span>): <span id="valKbar">50</span></label>
-            <input type="range" id="paramK" min="10" max="100" value="50">
-        </div>
-        <div class="slider-group">
-            <label>Labor Endowment (<span class="formula">L̄</span>): <span id="valLbar">80</span></label>
-            <input type="range" id="paramL" min="10" max="100" value="80">
-        </div>
-        <div class="slider-group">
-            <label>Capital Share (<span class="formula">α</span>): <span id="valAlpha">0.30</span></label>
-            <input type="range" id="paramAlpha" min="0.1" max="0.9" step="0.05" value="0.3">
-        </div>
+    <div class="header">
+        <h1>Macroeconomic Production & Factor Income</h1>
+        <p>Explore how technology and endowments determine prices and income shares.</p>
     </div>
 
-    <div class="shares-container">
-        <div class="share-card labor-bg">
-            Labor Income Share (wL / Y): <span id="shareL">--</span>
-        </div>
-        <div class="share-card capital-bg">
-            Capital Income Share (rK / Y): <span id="shareK">--</span>
-        </div>
-    </div>
+    <div class="main-grid">
+        <div class="controls-panel">
+            
+            <div class="control-card">
+                <div class="slider-row">
+                    <label>Capital Endowment (K̄): <span id="vK">50</span></label>
+                    <input type="range" id="Kbar" min="10" max="100" value="50">
+                </div>
+                <div class="slider-row">
+                    <label>Labor Endowment (L̄): <span id="vL">80</span></label>
+                    <input type="range" id="Lbar" min="10" max="100" value="80">
+                </div>
+                <div class="slider-row">
+                    <label>Capital Share (α): <span id="vA">0.30</span></label>
+                    <input type="range" id="Alpha" min="0.1" max="0.9" step="0.05" value="0.3">
+                </div>
+                
+                <div class="stat-row">
+                    <div class="stat-box">
+                        <span class="stat-label">Labor Share (wL/Y)</span>
+                        <span id="sL" class="stat-val">70%</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Capital Share (rK/Y)</span>
+                        <span id="sK" class="stat-val">30%</span>
+                    </div>
+                </div>
+            </div>
 
-    <div class="price-bar">
-        <div class="slider-group">
-            <label>Market Real Wage (<span class="formula">w</span>): <span id="valW">40</span></label>
-            <input type="range" id="priceW" min="5" max="100" value="43">
+            <div class="two-col">
+                <div>
+                    <div class="equation-label">MPL = (1-α)A(K/L)^α</div>
+                    <canvas id="mplChart" height="250"></canvas>
+                </div>
+                <div>
+                    <div class="equation-label">MPK = αA(L/K)^(1-α)</div>
+                    <canvas id="mpkChart" height="250"></canvas>
+                </div>
+            </div>
         </div>
-        <div class="slider-group">
-            <label>Market Rental Rate (<span class="formula">r</span>): <span id="valR">15</span></label>
-            <input type="range" id="priceR" min="5" max="50" value="18">
-        </div>
-    </div>
 
-    <div class="charts-grid">
-        <div class="chart-wrap"><canvas id="laborChart"></canvas></div>
-        <div class="chart-wrap"><canvas id="capitalChart"></canvas></div>
+        <div class="charts-panel">
+            <div id="plot3d"></div>
+            <div class="control-card" style="background: #ecf0f1; color: #2c3e50;">
+                <p style="margin:0; font-size: 0.85em;">
+                    <strong>Tip:</strong> The dot on the 3D surface shows the current Total Production (Y). 
+                    The 2D curves to the left are the "Partial Derivatives" (slopes) of this surface at that specific dot.
+                </p>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
     const A = 100;
-    let laborChart, capitalChart;
+    let mplChart, mpkChart;
 
-    const els = {
-        K: document.getElementById('paramK'),
-        L: document.getElementById('paramL'),
-        A: document.getElementById('paramAlpha'),
-        W: document.getElementById('priceW'),
-        R: document.getElementById('priceR'),
-        dispK: document.getElementById('valKbar'),
-        dispL: document.getElementById('valLbar'),
-        dispA: document.getElementById('valAlpha'),
-        dispW: document.getElementById('valW'),
-        dispR: document.getElementById('valR'),
-        shareL: document.getElementById('shareL'),
-        shareK: document.getElementById('shareK')
-    };
-
-    function init() {
-        const config = (title, max) => ({
+    function initCharts() {
+        const cfg = (label) => ({
             type: 'line',
             data: {
-                labels: Array.from({length: 101}, (_, i) => i),
+                labels: Array.from({length: 100}, (_, i) => i + 1),
                 datasets: [
-                    { label: 'Demand (MP)', data: [], borderColor: '#3498db', pointRadius: 0, tension: 0.2 },
-                    { label: 'Supply (Fixed)', data: [], borderColor: '#2c3e50', borderDash: [5,5], pointRadius: 0 },
-                    { label: 'Market Price', data: [], borderColor: '#e74c3c', borderWidth: 2, pointRadius: 0 }
+                    { label: label, data: [], borderColor: '#3498db', pointRadius: 0, tension: 0.2 },
+                    { label: 'Supply', data: [], borderColor: '#2c3e50', borderDash: [5,5], pointRadius: 0 }
                 ]
             },
             options: { 
-                responsive: true, maintainAspectRatio: false, 
+                responsive: true, 
                 animation: false,
-                scales: { y: { min: 0, max: max }, x: { title: { display: true, text: title } } }
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
             }
         });
+        mplChart = new Chart(document.getElementById('mplChart'), cfg('Marginal Product of Labor'));
+        mpkChart = new Chart(document.getElementById('mpkChart'), cfg('Marginal Product of Capital'));
+    }
 
-        laborChart = new Chart(document.getElementById('laborChart'), config('Quantity of Labor', 120));
-        capitalChart = new Chart(document.getElementById('capitalChart'), config('Quantity of Capital', 60));
-        update();
+    function calculate3D(alpha) {
+        let z = [];
+        let xSize = 50; // K
+        let ySize = 50; // L
+        for(let i=0; i<xSize; i++) {
+            let row = [];
+            for(let j=0; j<ySize; j++) {
+                let k = (i/xSize) * 100;
+                let l = (j/ySize) * 100;
+                row.push(A * Math.pow(k, alpha) * Math.pow(l, 1-alpha));
+            }
+            z.push(row);
+        }
+        return z;
     }
 
     function update() {
-        const K_bar = parseFloat(els.K.value);
-        const L_bar = parseFloat(els.L.value);
-        const alpha = parseFloat(els.A.value);
-        const w = parseFloat(els.W.value);
-        const r = parseFloat(els.R.value);
+        const K_val = parseFloat(document.getElementById('Kbar').value);
+        const L_val = parseFloat(document.getElementById('Lbar').value);
+        const a_val = parseFloat(document.getElementById('Alpha').value);
 
-        els.dispK.innerText = K_bar;
-        els.dispL.innerText = L_bar;
-        els.dispA.innerText = alpha.toFixed(2);
-        els.dispW.innerText = w;
-        els.dispR.innerText = r;
+        document.getElementById('vK').innerText = K_val;
+        document.getElementById('vL').innerText = L_val;
+        document.getElementById('vA').innerText = a_val.toFixed(2);
 
-        // 1. Calculate Production and Shares
-        const Y = A * Math.pow(K_bar, alpha) * Math.pow(L_bar, 1 - alpha);
-        const eqW = (1 - alpha) * A * Math.pow(K_bar, alpha) * Math.pow(L_bar, -alpha);
-        const eqR = alpha * A * Math.pow(K_bar, alpha - 1) * Math.pow(L_bar, 1 - alpha);
+        // Update Shares
+        document.getElementById('sL').innerText = ((1-a_val)*100).toFixed(0) + "%";
+        document.getElementById('sK').innerText = (a_val*100).toFixed(0) + "%";
 
-        // Calculate shares based on MARKET prices vs Output
-        // Note: In strict equilibrium w=eqW and r=eqR, so shares are (1-alpha) and alpha.
-        // If prices are disequilibrium, we show the current income ratio.
-        const labShare = (w * L_bar / Y) * 100;
-        const capShare = (r * K_bar / Y) * 100;
-        
-        els.shareL.innerText = labShare.toFixed(1) + "%";
-        els.shareK.innerText = capShare.toFixed(1) + "%";
-
-        // 2. Generate Graph Data
-        const mplData = [], mpkData = [], wLine = [], rLine = [];
-        for (let i = 1; i <= 100; i++) {
-            mplData.push((1 - alpha) * A * Math.pow(K_bar, alpha) * Math.pow(i, -alpha));
-            mpkData.push(alpha * A * Math.pow(i, alpha - 1) * Math.pow(L_bar, 1 - alpha));
-            wLine.push(w);
-            rLine.push(r);
+        // 2D Data
+        let mplData = [], mpkData = [];
+        for(let i=1; i<=100; i++) {
+            mplData.push((1-a_val) * A * Math.pow(K_val, a_val) * Math.pow(i, -a_val));
+            mpkData.push(a_val * A * Math.pow(i, a_val-1) * Math.pow(L_val, 1-a_val));
         }
 
-        // 3. Update Labor Chart
-        laborChart.data.datasets[0].data = mplData;
-        laborChart.data.datasets[1].data = [{x: L_bar, y: 0}, {x: L_bar, y: 120}]; // Vertical
-        laborChart.data.datasets[1].type = 'scatter'; laborChart.data.datasets[1].showLine = true;
-        laborChart.data.datasets[2].data = wLine;
-        laborChart.update();
+        mplChart.data.datasets[0].data = mplData;
+        mplChart.data.datasets[1].data = [{x: L_val, y: 0}, {x: L_val, y: 150}];
+        mplChart.data.datasets[1].type = 'scatter'; mplChart.data.datasets[1].showLine = true;
+        
+        mpkChart.data.datasets[0].data = mpkData;
+        mpkChart.data.datasets[1].data = [{x: K_val, y: 0}, {x: K_val, y: 100}];
+        mpkChart.data.datasets[1].type = 'scatter'; mpkChart.data.datasets[1].showLine = true;
 
-        // 4. Update Capital Chart
-        capitalChart.data.datasets[0].data = mpkData;
-        capitalChart.data.datasets[1].data = [{x: K_bar, y: 0}, {x: K_bar, y: 60}]; // Vertical
-        capitalChart.data.datasets[1].type = 'scatter'; capitalChart.data.datasets[1].showLine = true;
-        capitalChart.data.datasets[2].data = rLine;
-        capitalChart.update();
+        mplChart.update();
+        mpkChart.update();
+
+        // 3D Plotly Update
+        const zData = calculate3D(a_val);
+        const currentY = A * Math.pow(K_val, a_val) * Math.pow(L_val, 1-a_val);
+
+        const data = [{
+            z: zData,
+            type: 'surface',
+            colorscale: 'Viridis',
+            showscale: false,
+            opacity: 0.8
+        }, {
+            x: [L_val/2], // Simplified mapping for index
+            y: [K_val/2],
+            z: [currentY],
+            mode: 'markers',
+            type: 'scatter3d',
+            marker: { color: 'red', size: 8 }
+        }];
+
+        const layout = {
+            title: 'Total Production Y = f(K, L)',
+            autosize: true,
+            margin: { l: 0, r: 0, b: 0, t: 30 },
+            scene: {
+                xaxis: { title: 'Labor (L)' },
+                yaxis: { title: 'Capital (K)' },
+                zaxis: { title: 'Output (Y)' }
+            }
+        };
+
+        Plotly.react('plot3d', data, layout);
     }
 
-    [els.K, els.L, els.A, els.W, els.R].forEach(input => input.addEventListener('input', update));
-    window.onload = init;
+    window.onload = () => {
+        initCharts();
+        update();
+        document.querySelectorAll('input').forEach(i => i.addEventListener('input', update));
+    };
 </script>
+
 </body>
 </html>
