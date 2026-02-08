@@ -2,158 +2,245 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Ice Cream Factory | Profit Maximizer</title>
+    <title>Production Equilibrium Visualizer</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        :root { --primary: #2ecc71; --secondary: #3498db; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { max-width: 900px; width: 100%; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--primary); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         
-        /* Controls */
-        .controls { background: #f1f4f7; padding: 20px; border-radius: 10px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; }
-        input[type="range"] { width: 100%; margin-bottom: 20px; }
+        .container { max-width: 1000px; width: 100%; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { margin-top: 0; text-align: center; }
+        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
+
+        /* Control Panel */
+        .controls-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; padding: 20px; background: #ecf0f1; border-radius: 10px; }
+        .control-group h3 { margin: 0 0 15px 0; border-bottom: 2px solid #bdc3c7; padding-bottom: 5px; font-size: 1.1em; }
+        
+        label { display: flex; justify-content: space-between; font-weight: 600; margin-top: 10px; }
+        input[type=range] { width: 100%; cursor: pointer; }
         
         /* Stats */
-        .stat-box { text-align: center; padding: 15px; border-radius: 10px; background: #fff; border: 1px solid #eee; }
-        .big-val { font-size: 2em; font-weight: bold; color: var(--secondary); }
-        .profit-pos { color: #27ae60; }
-        .profit-neg { color: #e74c3c; }
+        .stats-bar { display: flex; justify-content: space-around; margin-bottom: 30px; background: #2c3e50; color: white; padding: 15px; border-radius: 8px; }
+        .stat-item { text-align: center; }
+        .stat-val { font-size: 1.4em; font-weight: bold; color: var(--accent); }
 
-        /* Equations */
-        .math-display { font-size: 0.9em; color: #555; margin-top: 10px; text-align: center; }
+        /* Charts Area */
+        .charts-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .chart-box { background: white; border: 1px solid #eee; border-radius: 8px; padding: 10px; }
         
-        table { width: 100%; margin-top: 15px; border-collapse: collapse; }
-        td, th { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
+        .explanation { font-size: 0.9em; color: #666; margin-top: 10px; text-align: center; font-style: italic;}
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 style="margin:0;">🍦 The Ice Cream Factory</h1>
-    <p style="color: #666;">Adjust Capital and Labor to maximize your profits.</p>
+    <h1>🏭 Firm Optimization</h1>
+    <p class="subtitle">Visualizing \(MP_L = w\) and \(MP_K = r\)</p>
 
-    <div class="math-display">
-        \(Y = A K^{\alpha} L^{1-\alpha}\) | Currently: \(A=100, \alpha=0.33, w=25, r=20\)
+    <div class="stats-bar">
+        <div class="stat-item">
+            <div>Output (\(Y\))</div>
+            <div id="dispY" class="stat-val">0</div>
+        </div>
+        <div class="stat-item">
+            <div>Profit (\(\Pi\))</div>
+            <div id="dispProfit" class="stat-val">0</div>
+        </div>
+        <div class="stat-item">
+            <div>\(MP_L\) vs \(w\)</div>
+            <div id="dispMplCheck" class="stat-val">0</div>
+        </div>
+        <div class="stat-item">
+            <div>\(MP_K\) vs \(r\)</div>
+            <div id="dispMpkCheck" class="stat-val">0</div>
+        </div>
     </div>
 
-    <div class="grid">
-        <div class="controls">
-            <label>Capital (\(K\)): <span id="kVal">10</span> Machines</label>
-            <input type="range" id="inputK" min="1" max="100" value="10">
+    <div class="controls-wrapper">
+        <div class="control-group">
+            <h3>Inputs (You control these)</h3>
+            <label>Labor (\(L\)): <span id="valL">50</span></label>
+            <input type="range" id="inputL" min="1" max="100" value="50">
 
-            <label>Labor (\(L\)): <span id="lVal">10</span> Workers</label>
-            <input type="range" id="inputL" min="1" max="100" value="10">
+            <label>Capital (\(K\)): <span id="valK">50</span></label>
+            <input type="range" id="inputK" min="1" max="100" value="50">
+        </div>
+
+        <div class="control-group">
+            <h3>Market Prices (Fixed for now)</h3>
+            <label>Wage (\(w\)): <span id="valW">--</span></label>
+            <input type="range" id="inputW" min="1" max="50" value="15">
             
-            <div class="stat-box" style="margin-top:20px;">
-                <div>Total Profit (\(\Pi\))</div>
-                <div id="profitDisplay" class="big-val">0</div>
+            <label>Rental Rate (\(r\)): <span id="valR">--</span></label>
+            <input type="range" id="inputR" min="1" max="50" value="15">
+        </div>
+    </div>
+
+    <div class="charts-container">
+        <div class="chart-box">
+            <canvas id="chartL"></canvas>
+            <div class="explanation">
+                Blue Curve: \(MP_L\) (diminishing) <br>
+                Red Line: Wage (\(w\))
             </div>
         </div>
-
-        <div class="charts">
-            <canvas id="compChart" height="200"></canvas>
-            
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Value</th>
-                    <th>Formula</th>
-                </tr>
-                <tr>
-                    <td>Labor Share</td>
-                    <td id="labShare">--</td>
-                    <td>\(wL / Y\)</td>
-                </tr>
-                <tr>
-                    <td>Capital Share</td>
-                    <td id="capShare">--</td>
-                    <td>\(rK / Y\)</td>
-                </tr>
-            </table>
+        <div class="chart-box">
+            <canvas id="chartK"></canvas>
+            <div class="explanation">
+                Green Curve: \(MP_K\) (diminishing) <br>
+                Red Line: Rental Rate (\(r\))
+            </div>
         </div>
     </div>
-    
-    <button id="submitBtn" style="width:100%; margin-top:20px; padding:15px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
-        Lock in Production Plan
-    </button>
+
 </div>
 
 <script>
-    // Constants from your slides
-    const A = 100;
-    const alpha = 0.33; // 'a' in your slides
-    const w = 25;       // Wage
-    const r = 20;       // Rental rate
+    // --- Model Parameters ---
+    const A = 50;
+    const alpha = 0.3; // Capital Share
+    // Labor Share = 0.7
 
-    const inputK = document.getElementById('inputK');
-    const inputL = document.getElementById('inputL');
-    const profitDisplay = document.getElementById('profitDisplay');
+    // --- DOM Elements ---
+    const els = {
+        L: document.getElementById('inputL'),
+        K: document.getElementById('inputK'),
+        W: document.getElementById('inputW'),
+        R: document.getElementById('inputR'),
+        dispL: document.getElementById('valL'),
+        dispK: document.getElementById('valK'),
+        dispW: document.getElementById('valW'),
+        dispR: document.getElementById('valR'),
+        dispY: document.getElementById('dispY'),
+        dispProfit: document.getElementById('dispProfit'),
+        dispMplCheck: document.getElementById('dispMplCheck'),
+        dispMpkCheck: document.getElementById('dispMpkCheck')
+    };
 
-    let chart;
+    let chartL, chartK;
 
-    function calculate() {
-        const K = parseFloat(inputK.value);
-        const L = parseFloat(inputL.value);
+    // --- Math Functions ---
+    function getMPL(K, L) { return (1 - alpha) * A * Math.pow(K, alpha) * Math.pow(L, -alpha); }
+    function getMPK(K, L) { return alpha * A * Math.pow(K, alpha - 1) * Math.pow(L, 1 - alpha); }
+    
+    // --- Chart Initialization ---
+    function initCharts() {
+        const commonOptions = {
+            responsive: true,
+            scales: {
+                x: { title: { display: true, text: 'Quantity of Input' }, min: 0, max: 100 },
+                y: { title: { display: true, text: 'Marginal Product / Price ($)' }, min: 0, max: 60 }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false } // Disable tooltips for cleaner look
+            },
+            animation: { duration: 0 } // Fast updates
+        };
 
-        document.getElementById('kVal').innerText = K;
-        document.getElementById('lVal').innerText = L;
-
-        // Cobb-Douglas: Y = A * K^a * L^(1-a)
-        const Y = A * Math.pow(K, alpha) * Math.pow(L, (1 - alpha));
-        
-        // Marginal Products
-        const MPK = alpha * (Y / K);
-        const MPL = (1 - alpha) * (Y / L);
-
-        // Profit
-        const profit = Y - (r * K) - (w * L);
-
-        // Shares
-        const laborShare = (w * L) / Y;
-        const capitalShare = (r * K) / Y;
-
-        // Update UI
-        profitDisplay.innerText = profit.toFixed(2);
-        profitDisplay.className = 'big-val ' + (profit >= 0 ? 'profit-pos' : 'profit-neg');
-        
-        document.getElementById('labShare').innerText = laborShare.toFixed(3);
-        document.getElementById('capShare').innerText = capitalShare.toFixed(3);
-
-        updateChart(MPL, MPK);
-    }
-
-    function initChart() {
-        const ctx = document.getElementById('compChart').getContext('2d');
-        chart = new Chart(ctx, {
-            type: 'bar',
+        // LABOR CHART
+        chartL = new Chart(document.getElementById('chartL'), {
+            type: 'line',
             data: {
-                labels: ['Labor (MPL vs w)', 'Capital (MPK vs r)'],
+                labels: Array.from({length: 100}, (_, i) => i + 1),
                 datasets: [
-                    { label: 'Marginal Product', data: [0, 0], backgroundColor: '#3498db' },
-                    { label: 'Factor Price', data: [w, r], backgroundColor: '#e74c3c' }
+                    { label: 'Wage', data: [], borderColor: '#e74c3c', borderWidth: 2, pointRadius: 0, borderDash: [5, 5] }, // Horizontal Line
+                    { label: 'MPL', data: [], borderColor: '#3498db', borderWidth: 2, pointRadius: 0, tension: 0.4 }, // Curve
+                    { label: 'Current', data: [], backgroundColor: '#2c3e50', pointRadius: 8, type: 'scatter' } // The User's Dot
                 ]
             },
-            options: {
-                scales: { y: { beginAtZero: true } },
-                plugins: { title: { display: true, text: 'Efficiency Check: MP = Price?' } }
-            }
+            options: commonOptions
+        });
+
+        // CAPITAL CHART
+        chartK = new Chart(document.getElementById('chartK'), {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 100}, (_, i) => i + 1),
+                datasets: [
+                    { label: 'Rent', data: [], borderColor: '#e74c3c', borderWidth: 2, pointRadius: 0, borderDash: [5, 5] },
+                    { label: 'MPK', data: [], borderColor: '#27ae60', borderWidth: 2, pointRadius: 0, tension: 0.4 },
+                    { label: 'Current', data: [], backgroundColor: '#2c3e50', pointRadius: 8, type: 'scatter' }
+                ]
+            },
+            options: commonOptions
         });
     }
 
-    function updateChart(mpl, mpk) {
-        chart.data.datasets[0].data = [mpl.toFixed(2), mpk.toFixed(2)];
-        chart.update();
+    // --- Main Update Loop ---
+    function update() {
+        // 1. Get Values
+        const L = parseFloat(els.L.value);
+        const K = parseFloat(els.K.value);
+        const w = parseFloat(els.W.value);
+        const r = parseFloat(els.R.value);
+
+        // 2. Update Text Displays
+        els.dispL.innerText = L;
+        els.dispK.innerText = K;
+        els.dispW.innerText = w;
+        els.dispR.innerText = r;
+
+        // 3. Calculate Output & Profit
+        const Y = A * Math.pow(K, alpha) * Math.pow(L, 1 - alpha);
+        const profit = Y - (w * L) - (r * K);
+        
+        els.dispY.innerText = Y.toFixed(1);
+        els.dispProfit.innerText = profit.toFixed(1);
+        els.dispProfit.style.color = profit >= 0 ? '#27ae60' : '#e74c3c';
+
+        // 4. Calculate Current Marginal Products
+        const currentMPL = getMPL(K, L);
+        const currentMPK = getMPK(K, L);
+
+        // Display Logic: Compare MP to Price
+        els.dispMplCheck.innerHTML = `${currentMPL.toFixed(1)} vs ${w} <br><small>${currentMPL > w ? '(Hire More!)' : (currentMPL < w ? '(Fire!)' : '(Optimal)')}</small>`;
+        els.dispMpkCheck.innerHTML = `${currentMPK.toFixed(1)} vs ${r} <br><small>${currentMPK > r ? '(Rent More!)' : (currentMPK < r ? '(Return!)' : '(Optimal)')}</small>`;
+
+        // 5. Generate Curves (Arrays)
+        // We generate 100 points for the curves based on the *other* factor being fixed
+        const dataMPL = [];
+        const dataMPK = [];
+        const dataWage = [];
+        const dataRent = [];
+        
+        for(let i = 1; i <= 100; i++) {
+            // For MPL curve, K is fixed at user's current K
+            let mp_l_val = getMPL(K, i); 
+            dataMPL.push(mp_l_val > 60 ? 60 : mp_l_val); // Cap for visual tidiness
+            dataWage.push(w);
+
+            // For MPK curve, L is fixed at user's current L
+            let mp_k_val = getMPK(i, L);
+            dataMPK.push(mp_k_val > 60 ? 60 : mp_k_val);
+            dataRent.push(r);
+        }
+
+        // 6. Update Chart Data
+        
+        // Labor Chart
+        chartL.data.datasets[0].data = dataWage; // Red Line
+        chartL.data.datasets[1].data = dataMPL;  // Blue Curve
+        chartL.data.datasets[2].data = [{x: L-1, y: currentMPL}]; // The Dot (x is index 0-99)
+        chartL.update();
+
+        // Capital Chart
+        chartK.data.datasets[0].data = dataRent; // Red Line
+        chartK.data.datasets[1].data = dataMPK;  // Green Curve
+        chartK.data.datasets[2].data = [{x: K-1, y: currentMPK}]; // The Dot
+        chartK.update();
     }
 
-    [inputK, inputL].forEach(el => el.addEventListener('input', calculate));
-    
+    // --- Events ---
+    [els.L, els.K, els.W, els.R].forEach(el => el.addEventListener('input', update));
+
+    // --- Init ---
     window.onload = () => {
-        initChart();
-        calculate();
+        initCharts();
+        update();
     };
+
 </script>
 </body>
 </html>
