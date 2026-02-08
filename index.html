@@ -2,245 +2,132 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Production Equilibrium Visualizer</title>
+    <title>Macro Equilibrium: Factor Markets</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--primary); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
-        
-        .container { max-width: 1000px; width: 100%; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h1 { margin-top: 0; text-align: center; }
-        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
-
-        /* Control Panel */
-        .controls-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; padding: 20px; background: #ecf0f1; border-radius: 10px; }
-        .control-group h3 { margin: 0 0 15px 0; border-bottom: 2px solid #bdc3c7; padding-bottom: 5px; font-size: 1.1em; }
-        
-        label { display: flex; justify-content: space-between; font-weight: 600; margin-top: 10px; }
-        input[type=range] { width: 100%; cursor: pointer; }
-        
-        /* Stats */
-        .stats-bar { display: flex; justify-content: space-around; margin-bottom: 30px; background: #2c3e50; color: white; padding: 15px; border-radius: 8px; }
-        .stat-item { text-align: center; }
-        .stat-val { font-size: 1.4em; font-weight: bold; color: var(--accent); }
-
-        /* Charts Area */
-        .charts-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .chart-box { background: white; border: 1px solid #eee; border-radius: 8px; padding: 10px; }
-        
-        .explanation { font-size: 0.9em; color: #666; margin-top: 10px; text-align: center; font-style: italic;}
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f0f2f5; }
+        .dashboard { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 900px; width: 95%; }
+        .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .controls { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .status-box { grid-column: span 2; text-align: center; border-top: 1px solid #555; padding-top: 10px; font-weight: bold; }
+        .equilibrium-marker { color: #2ecc71; }
+        .disequilibrium-marker { color: #e74c3c; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🏭 Firm Optimization</h1>
-    <p class="subtitle">Visualizing \(MP_L = w\) and \(MP_K = r\)</p>
-
-    <div class="stats-bar">
-        <div class="stat-item">
-            <div>Output (\(Y\))</div>
-            <div id="dispY" class="stat-val">0</div>
+<div class="dashboard">
+    <h2>Chapter II: Production & Factor Market Equilibrium</h2>
+    
+    <div class="controls">
+        <div>
+            <label>Market Price of Capital (r): <span id="rVal">15</span></label><br>
+            <input type="range" id="priceR" min="5" max="45" value="15" style="width:100%">
         </div>
-        <div class="stat-item">
-            <div>Profit (\(\Pi\))</div>
-            <div id="dispProfit" class="stat-val">0</div>
+        <div>
+            <label>Fixed Capital Supply (\(\bar{K}\)): 50</label><br>
+            <small>Supply is fixed by the economy's endowments.</small>
         </div>
-        <div class="stat-item">
-            <div>\(MP_L\) vs \(w\)</div>
-            <div id="dispMplCheck" class="stat-val">0</div>
-        </div>
-        <div class="stat-item">
-            <div>\(MP_K\) vs \(r\)</div>
-            <div id="dispMpkCheck" class="stat-val">0</div>
+        <div class="status-box" id="marketStatus">
+            Checking Market Condition...
         </div>
     </div>
 
-    <div class="controls-wrapper">
-        <div class="control-group">
-            <h3>Inputs (You control these)</h3>
-            <label>Labor (\(L\)): <span id="valL">50</span></label>
-            <input type="range" id="inputL" min="1" max="100" value="50">
-
-            <label>Capital (\(K\)): <span id="valK">50</span></label>
-            <input type="range" id="inputK" min="1" max="100" value="50">
+    <div class="charts">
+        <div>
+            <canvas id="capMarketChart"></canvas>
+            <p style="font-size: 0.8em; text-align: center;"><b>Capital Market:</b> Fixed Supply vs. Firm Demand (MPK)</p>
         </div>
-
-        <div class="control-group">
-            <h3>Market Prices (Fixed for now)</h3>
-            <label>Wage (\(w\)): <span id="valW">--</span></label>
-            <input type="range" id="inputW" min="1" max="50" value="15">
-            
-            <label>Rental Rate (\(r\)): <span id="valR">--</span></label>
-            <input type="range" id="inputR" min="1" max="50" value="15">
+        <div>
+            <canvas id="mplChart"></canvas>
+            <p style="font-size: 0.8em; text-align: center;"><b>Labor Productivity:</b> Marginal Product of Labor at \(\bar{K}\)</p>
         </div>
     </div>
-
-    <div class="charts-container">
-        <div class="chart-box">
-            <canvas id="chartL"></canvas>
-            <div class="explanation">
-                Blue Curve: \(MP_L\) (diminishing) <br>
-                Red Line: Wage (\(w\))
-            </div>
-        </div>
-        <div class="chart-box">
-            <canvas id="chartK"></canvas>
-            <div class="explanation">
-                Green Curve: \(MP_K\) (diminishing) <br>
-                Red Line: Rental Rate (\(r\))
-            </div>
-        </div>
-    </div>
-
 </div>
 
 <script>
-    // --- Model Parameters ---
-    const A = 50;
-    const alpha = 0.3; // Capital Share
-    // Labor Share = 0.7
-
-    // --- DOM Elements ---
-    const els = {
-        L: document.getElementById('inputL'),
-        K: document.getElementById('inputK'),
-        W: document.getElementById('inputW'),
-        R: document.getElementById('inputR'),
-        dispL: document.getElementById('valL'),
-        dispK: document.getElementById('valK'),
-        dispW: document.getElementById('valW'),
-        dispR: document.getElementById('valR'),
-        dispY: document.getElementById('dispY'),
-        dispProfit: document.getElementById('dispProfit'),
-        dispMplCheck: document.getElementById('dispMplCheck'),
-        dispMpkCheck: document.getElementById('dispMpkCheck')
-    };
-
-    let chartL, chartK;
-
-    // --- Math Functions ---
-    function getMPL(K, L) { return (1 - alpha) * A * Math.pow(K, alpha) * Math.pow(L, -alpha); }
-    function getMPK(K, L) { return alpha * A * Math.pow(K, alpha - 1) * Math.pow(L, 1 - alpha); }
+    const ctx1 = document.getElementById('capMarketChart').getContext('2d');
+    const ctx2 = document.getElementById('mplChart').getContext('2d');
     
-    // --- Chart Initialization ---
-    function initCharts() {
-        const commonOptions = {
-            responsive: true,
-            scales: {
-                x: { title: { display: true, text: 'Quantity of Input' }, min: 0, max: 100 },
-                y: { title: { display: true, text: 'Marginal Product / Price ($)' }, min: 0, max: 60 }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: { enabled: false } // Disable tooltips for cleaner look
-            },
-            animation: { duration: 0 } // Fast updates
-        };
+    // Parameters from your slides
+    const A = 100;
+    const alpha = 0.3;
+    const K_bar = 50;
+    const L_bar = 80;
 
-        // LABOR CHART
-        chartL = new Chart(document.getElementById('chartL'), {
-            type: 'line',
-            data: {
-                labels: Array.from({length: 100}, (_, i) => i + 1),
-                datasets: [
-                    { label: 'Wage', data: [], borderColor: '#e74c3c', borderWidth: 2, pointRadius: 0, borderDash: [5, 5] }, // Horizontal Line
-                    { label: 'MPL', data: [], borderColor: '#3498db', borderWidth: 2, pointRadius: 0, tension: 0.4 }, // Curve
-                    { label: 'Current', data: [], backgroundColor: '#2c3e50', pointRadius: 8, type: 'scatter' } // The User's Dot
-                ]
-            },
-            options: commonOptions
-        });
+    // Calc Equilibrium r*
+    const r_star = alpha * A * Math.pow(K_bar, alpha - 1) * Math.pow(L_bar, 1 - alpha);
 
-        // CAPITAL CHART
-        chartK = new Chart(document.getElementById('chartK'), {
-            type: 'line',
-            data: {
-                labels: Array.from({length: 100}, (_, i) => i + 1),
-                datasets: [
-                    { label: 'Rent', data: [], borderColor: '#e74c3c', borderWidth: 2, pointRadius: 0, borderDash: [5, 5] },
-                    { label: 'MPK', data: [], borderColor: '#27ae60', borderWidth: 2, pointRadius: 0, tension: 0.4 },
-                    { label: 'Current', data: [], backgroundColor: '#2c3e50', pointRadius: 8, type: 'scatter' }
-                ]
-            },
-            options: commonOptions
-        });
-    }
+    let capChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: Array.from({length: 100}, (_, i) => i + 1),
+            datasets: [
+                { label: 'Demand (MPK)', data: [], borderColor: '#3498db', pointRadius: 0 },
+                { label: 'Supply (K-bar)', data: [], borderColor: '#2c3e50', borderDash: [5,5], pointRadius: 0 },
+                { label: 'Current Price (r)', data: [], borderColor: '#e74c3c', borderWidth: 2, pointRadius: 0 }
+            ]
+        },
+        options: { scales: { y: { min: 0, max: 50 }, x: { title: {display:true, text:'Capital (K)'} } } }
+    });
 
-    // --- Main Update Loop ---
+    let mplChart = new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: Array.from({length: 100}, (_, i) => i + 1),
+            datasets: [{ label: 'MPL', data: [], borderColor: '#27ae60', pointRadius: 0 }]
+        },
+        options: { scales: { y: { min: 0, max: 150 }, x: { title: {display:true, text:'Labor (L)'} } } }
+    });
+
     function update() {
-        // 1. Get Values
-        const L = parseFloat(els.L.value);
-        const K = parseFloat(els.K.value);
-        const w = parseFloat(els.W.value);
-        const r = parseFloat(els.R.value);
+        const r = parseFloat(document.getElementById('priceR').value);
+        document.getElementById('rVal').innerText = r.toFixed(1);
 
-        // 2. Update Text Displays
-        els.dispL.innerText = L;
-        els.dispK.innerText = K;
-        els.dispW.innerText = w;
-        els.dispR.innerText = r;
+        // Calculate Demand for Capital at current r: r = alpha * A * K^(a-1) * L^(1-a)
+        // K_demand = [ r / (alpha * A * L_bar^(1-a)) ] ^ (1 / (alpha - 1))
+        const K_demand = Math.pow(r / (alpha * A * Math.pow(L_bar, 1-alpha)), 1/(alpha-1));
 
-        // 3. Calculate Output & Profit
-        const Y = A * Math.pow(K, alpha) * Math.pow(L, 1 - alpha);
-        const profit = Y - (w * L) - (r * K);
+        const mpkData = [];
+        const supplyData = [];
+        const priceLine = [];
+        const mplData = [];
+
+        for(let k=1; k<=100; k++) {
+            mpkData.push(alpha * A * Math.pow(k, alpha-1) * Math.pow(L_bar, 1-alpha));
+            supplyData.push(k === K_bar ? 50 : null); // Vertical line logic
+            priceLine.push(r);
+        }
         
-        els.dispY.innerText = Y.toFixed(1);
-        els.dispProfit.innerText = profit.toFixed(1);
-        els.dispProfit.style.color = profit >= 0 ? '#27ae60' : '#e74c3c';
+        // Supply line fix for Chart.js (Vertical line at K=50)
+        capChart.data.datasets[1].data = [{x: 50, y: 0}, {x: 50, y: 50}];
+        capChart.data.datasets[1].type = 'scatter';
+        capChart.data.datasets[1].showLine = true;
 
-        // 4. Calculate Current Marginal Products
-        const currentMPL = getMPL(K, L);
-        const currentMPK = getMPK(K, L);
-
-        // Display Logic: Compare MP to Price
-        els.dispMplCheck.innerHTML = `${currentMPL.toFixed(1)} vs ${w} <br><small>${currentMPL > w ? '(Hire More!)' : (currentMPL < w ? '(Fire!)' : '(Optimal)')}</small>`;
-        els.dispMpkCheck.innerHTML = `${currentMPK.toFixed(1)} vs ${r} <br><small>${currentMPK > r ? '(Rent More!)' : (currentMPK < r ? '(Return!)' : '(Optimal)')}</small>`;
-
-        // 5. Generate Curves (Arrays)
-        // We generate 100 points for the curves based on the *other* factor being fixed
-        const dataMPL = [];
-        const dataMPK = [];
-        const dataWage = [];
-        const dataRent = [];
-        
-        for(let i = 1; i <= 100; i++) {
-            // For MPL curve, K is fixed at user's current K
-            let mp_l_val = getMPL(K, i); 
-            dataMPL.push(mp_l_val > 60 ? 60 : mp_l_val); // Cap for visual tidiness
-            dataWage.push(w);
-
-            // For MPK curve, L is fixed at user's current L
-            let mp_k_val = getMPK(i, L);
-            dataMPK.push(mp_k_val > 60 ? 60 : mp_k_val);
-            dataRent.push(r);
+        for(let l=1; l<=100; l++) {
+            mplData.push((1-alpha) * A * Math.pow(K_bar, alpha) * Math.pow(l, -alpha));
         }
 
-        // 6. Update Chart Data
-        
-        // Labor Chart
-        chartL.data.datasets[0].data = dataWage; // Red Line
-        chartL.data.datasets[1].data = dataMPL;  // Blue Curve
-        chartL.data.datasets[2].data = [{x: L-1, y: currentMPL}]; // The Dot (x is index 0-99)
-        chartL.update();
+        capChart.data.datasets[0].data = mpkData;
+        capChart.data.datasets[2].data = priceLine;
+        mplChart.data.datasets[0].data = mplData;
 
-        // Capital Chart
-        chartK.data.datasets[0].data = dataRent; // Red Line
-        chartK.data.datasets[1].data = dataMPK;  // Green Curve
-        chartK.data.datasets[2].data = [{x: K-1, y: currentMPK}]; // The Dot
-        chartK.update();
+        // Market Status Logic
+        const statusEl = document.getElementById('marketStatus');
+        if (Math.abs(r - r_star) < 1) {
+            statusEl.innerHTML = `<span class="equilibrium-marker">EQUILIBRIUM: r ≈ ${r_star.toFixed(2)}. Market Clears!</span>`;
+        } else if (r > r_star) {
+            statusEl.innerHTML = `<span class="disequilibrium-marker">EXCESS SUPPLY: Price is too high. Firms only want ${K_demand.toFixed(1)} units of capital.</span>`;
+        } else {
+            statusEl.innerHTML = `<span class="disequilibrium-marker">EXCESS DEMAND: Price is too low. Firms want ${K_demand.toFixed(1)} units of capital!</span>`;
+        }
+
+        capChart.update();
+        mplChart.update();
     }
 
-    // --- Events ---
-    [els.L, els.K, els.W, els.R].forEach(el => el.addEventListener('input', update));
-
-    // --- Init ---
-    window.onload = () => {
-        initCharts();
-        update();
-    };
-
+    document.getElementById('priceR').addEventListener('input', update);
+    update();
 </script>
 </body>
 </html>
