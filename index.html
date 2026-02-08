@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scoop-Master 3000: Industrial Edition</title>
+    <title>Scoop-Master 3000: Equation Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
@@ -12,41 +12,37 @@
         
         body { 
             font-family: 'Space Grotesk', sans-serif; 
-            background: #f8f9fa; margin: 0; padding: 20px;
+            background: #fdf2f8; margin: 0; padding: 20px;
             display: flex; justify-content: center; overflow-x: hidden;
         }
 
-        /* Fixed-width container prevents "growing to the right" */
         .app-container { 
             width: 1000px; 
             max-width: 1000px;
             background: #ffffff;
             border-radius: 24px;
             padding: 30px;
-            border: 4px solid #333;
-            box-shadow: 12px 12px 0px #ff8787;
+            border: 4px solid #4b3621; /* Chocolate border */
+            box-shadow: 12px 12px 0px #ffc9c9;
         }
 
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { margin: 0; font-weight: 800; color: #333; text-transform: uppercase; letter-spacing: -1px; }
+        .header { text-align: center; margin-bottom: 25px; }
+        .header h1 { margin: 0; font-weight: 800; color: #4b3621; text-transform: uppercase; }
 
         .main-layout { display: grid; grid-template-columns: 320px 1fr; gap: 30px; }
 
-        /* Left Sidebar Controls */
-        .sidebar { background: #fff5f5; padding: 20px; border-radius: 16px; border: 2px solid #333; }
-        .control-group { margin-bottom: 20px; }
+        .sidebar { background: #fff9db; padding: 20px; border-radius: 16px; border: 2px solid #4b3621; }
+        .control-group { margin-bottom: 18px; }
         .control-group label { 
             display: flex; justify-content: space-between; 
-            font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; 
+            font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; 
         }
-        input[type=range] { width: 100%; cursor: pointer; accent-color: #333; }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: #4b3621; }
 
         .price-zone { 
-            border-top: 2px solid #333; padding-top: 20px; margin-top: 20px; 
-            background: #e3fafc; margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px;
+            border-top: 2px dashed #4b3621; padding-top: 15px; margin-top: 15px;
         }
 
-        /* Right Side Charts */
         .chart-stack { display: flex; flex-direction: column; gap: 20px; }
         .chart-box { 
             height: 280px; 
@@ -55,32 +51,45 @@
             border: 2px solid #eee; 
             border-radius: 12px;
             padding: 10px;
-        }
-        .chart-title { 
-            font-weight: 800; font-size: 0.75rem; color: #adb5bd; 
-            text-transform: uppercase; margin-bottom: 5px; text-align: center;
+            background: #fff;
         }
 
-        /* Bottom Stats Bar */
+        /* Equation Label Styles */
+        .eq-overlay {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #4b3621;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #4b3621;
+            pointer-events: none;
+            z-index: 10;
+        }
+
         .stats-bar { 
             display: grid; grid-template-columns: repeat(4, 1fr); 
             gap: 15px; margin-top: 30px; 
         }
         .stat-card { 
-            background: #333; color: white; padding: 15px; 
+            background: #4b3621; color: white; padding: 15px; 
             border-radius: 12px; text-align: center; 
         }
-        .stat-card small { display: block; font-size: 0.65rem; text-transform: uppercase; opacity: 0.7; }
-        .stat-card span { font-size: 1.2rem; font-weight: 700; }
+        .stat-card small { display: block; font-size: 0.6rem; text-transform: uppercase; opacity: 0.8; }
+        .stat-card span { font-size: 1.1rem; font-weight: 700; }
         
-        .status-badge { grid-column: span 4; padding: 10px; border-radius: 8px; text-align: center; font-weight: 800; }
+        .status-badge { grid-column: span 4; padding: 12px; border-radius: 8px; text-align: center; font-weight: 800; border: 2px solid #4b3621; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">
-        <h1>🍨 Ice Cream Factory OS</h1>
+        <h1>🍦 Scoop-Master Equations</h1>
     </div>
 
     <div class="main-layout">
@@ -94,17 +103,17 @@
                 <input type="range" id="Lbar" min="10" max="100" value="80">
             </div>
             <div class="control-group">
-                <label>Tech Alpha (α) <span id="valA">0.30</span></label>
+                <label>Flavor Alpha (α) <span id="valA">0.30</span></label>
                 <input type="range" id="Alpha" min="0.1" max="0.9" step="0.05" value="0.30">
             </div>
 
             <div class="price-zone">
                 <div class="control-group">
-                    <label style="color:#e03131">Wage (w) <span id="valW">40</span></label>
+                    <label style="color:#d9480f">Labor Wage (w) <span id="valW">40</span></label>
                     <input type="range" id="Wage" min="10" max="150" value="40">
                 </div>
                 <div class="control-group">
-                    <label style="color:#099268">Machine Rent (r) <span id="valR">20</span></label>
+                    <label style="color:#087f5b">Machine Rent (r) <span id="valR">20</span></label>
                     <input type="range" id="Rent" min="5" max="100" value="20">
                 </div>
             </div>
@@ -112,11 +121,11 @@
 
         <div class="chart-stack">
             <div class="chart-box">
-                <div class="chart-title">Factor Market: Scoopers (L)</div>
+                <div id="eqL" class="eq-overlay">MPL = ...</div>
                 <canvas id="chartL"></canvas>
             </div>
             <div class="chart-box">
-                <div class="chart-title">Factor Market: Machines (K)</div>
+                <div id="eqK" class="eq-overlay">MPK = ...</div>
                 <canvas id="chartK"></canvas>
             </div>
         </div>
@@ -128,18 +137,18 @@
             <span id="statY">0</span>
         </div>
         <div class="stat-card">
-            <small>Wage / MPL</small>
-            <span id="statW_Ratio">0.0</span>
-        </div>
-        <div class="stat-card">
-            <small>Rent / MPK</small>
-            <span id="statR_Ratio">0.0</span>
-        </div>
-        <div class="stat-card">
-            <small>Labor Share</small>
+            <small>Worker Share</small>
             <span id="statLS">0%</span>
         </div>
-        <div id="statusMsg" class="status-badge">Checking Factory Equilibrium...</div>
+        <div class="stat-card">
+            <small>Owner Share</small>
+            <span id="statKS">0%</span>
+        </div>
+        <div class="stat-card">
+            <small>Efficiency (A)</small>
+            <span>100</span>
+        </div>
+        <div id="statusMsg" class="status-badge">System Initializing...</div>
     </div>
 </div>
 
@@ -148,29 +157,27 @@
     let chartL, chartK;
 
     function init() {
-        const config = (color) => ({
+        const config = (title, color) => ({
             type: 'line',
             data: {
                 datasets: [
                     { label: 'Marginal Product', data: [], borderColor: color, borderWidth: 4, pointRadius: 0, tension: 0.1 },
-                    { label: 'Factory Capacity', data: [], borderColor: '#333', borderDash: [6,3], pointRadius: 0, borderWidth: 2 },
-                    { label: 'Market Price', data: [], borderColor: '#fab005', borderWidth: 3, pointRadius: 0 }
+                    { label: 'Supply', data: [], borderColor: '#4b3621', borderDash: [6,3], pointRadius: 0, borderWidth: 2 },
+                    { label: 'Price', data: [], borderColor: '#fab005', borderWidth: 3, pointRadius: 0 }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false, // Key to stability
-                animation: false,
-                plugins: { legend: { display: false } },
+                responsive: true, maintainAspectRatio: false, animation: false,
+                plugins: { legend: { display: false }, title: { display: true, text: title, font: {size: 14} } },
                 scales: {
-                    x: { type: 'linear', min: 0, max: 100, grid: { display: false } },
+                    x: { type: 'linear', min: 0, max: 100 },
                     y: { beginAtZero: true, max: 160 }
                 }
             }
         });
 
-        chartL = new Chart(document.getElementById('chartL').getContext('2d'), config('#ff8787'));
-        chartK = new Chart(document.getElementById('chartK').getContext('2d'), config('#63e6be'));
+        chartL = new Chart(document.getElementById('chartL'), config('Labor Market (Scoopers)', '#ff8787'));
+        chartK = new Chart(document.getElementById('chartK'), config('Capital Market (Machines)', '#63e6be'));
         update();
     }
 
@@ -181,45 +188,46 @@
         const w = parseFloat(document.getElementById('Wage').value);
         const r = parseFloat(document.getElementById('Rent').value);
 
+        // Update UI Text
         document.getElementById('valK').innerText = K;
         document.getElementById('valL').innerText = L;
         document.getElementById('valA').innerText = a.toFixed(2);
         document.getElementById('valW').innerText = w;
         document.getElementById('valR').innerText = r;
 
+        // Dynamic Equations
+        document.getElementById('eqL').innerHTML = `MPL = (1 - ${a}) * 100 * K<sup>${a}</sup> * L<sup>-${a}</sup>`;
+        document.getElementById('eqK').innerHTML = `MPK = ${a} * 100 * K<sup>${(a-1).toFixed(2)}</sup> * L<sup>${(1-a).toFixed(2)}</sup>`;
+
         const Y = A * Math.pow(K, a) * Math.pow(L, 1-a);
         const MPL = (1-a) * A * Math.pow(K/L, a);
         const MPK = a * A * Math.pow(L/K, 1-a);
 
-        // Stats Update
         document.getElementById('statY').innerText = Math.round(Y).toLocaleString();
-        document.getElementById('statW_Ratio').innerText = (w/MPL).toFixed(2);
-        document.getElementById('statR_Ratio').innerText = (r/MPK).toFixed(2);
         document.getElementById('statLS').innerText = ((w * L / Y) * 100).toFixed(0) + "%";
+        document.getElementById('statKS').innerText = ((r * K / Y) * 100).toFixed(0) + "%";
 
-        // Equilibrium Check
         const isEquil = Math.abs(w-MPL) < 3 && Math.abs(r-MPK) < 2;
         const badge = document.getElementById('statusMsg');
-        badge.innerText = isEquil ? "✅ PRODUCTION IS OPTIMIZED (MP = PRICE)" : "❌ MARKET DISEQUILIBRIUM: ADJUST PRICES";
-        badge.style.background = isEquil ? "#d3f9d8" : "#fff0f0";
+        badge.innerText = isEquil ? "✅ PERFECT SCOOP EQUILIBRIUM" : "❌ DISEQUILIBRIUM: ADJUST WAGES/RENT";
+        badge.style.background = isEquil ? "#ebfbee" : "#fff5f5";
         badge.style.color = isEquil ? "#2b8a3e" : "#c92a2a";
 
-        // Generate Chart Data
-        let dataL = [], dataK = [];
+        // Chart Data Generation
+        let dL = [], dK = [];
         for(let i=1; i<=100; i++) {
-            dataL.push({x: i, y: (1-a) * A * Math.pow(K, a) * Math.pow(i, -a)});
-            dataK.push({x: i, y: a * A * Math.pow(i, a-1) * Math.pow(L, 1-a)});
+            dL.push({x: i, y: (1-a) * A * Math.pow(K, a) * Math.pow(i, -a)});
+            dK.push({x: i, y: a * A * Math.pow(i, a-1) * Math.pow(L, 1-a)});
         }
 
-        // Apply to L Chart
-        chartL.data.datasets[0].data = dataL;
-        chartL.data.datasets[1].data = [{x: L, y: 0}, {x: L, y: 160}]; // Supply line to top
+        // Apply Data - Ensuring Vertical Lines hit the TOP
+        chartL.data.datasets[0].data = dL;
+        chartL.data.datasets[1].data = [{x: L, y: 0}, {x: L, y: 160}]; 
         chartL.data.datasets[2].data = [{x: 0, y: w}, {x: 100, y: w}];
         chartL.update();
 
-        // Apply to K Chart
-        chartK.data.datasets[0].data = dataK;
-        chartK.data.datasets[1].data = [{x: K, y: 0}, {x: K, y: 160}]; // Supply line to top
+        chartK.data.datasets[0].data = dK;
+        chartK.data.datasets[1].data = [{x: K, y: 0}, {x: K, y: 160}];
         chartK.data.datasets[2].data = [{x: 0, y: r}, {x: 100, y: r}];
         chartK.update();
     }
