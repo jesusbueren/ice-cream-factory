@@ -8,7 +8,6 @@
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
-
 * { box-sizing: border-box; }
 
 body {
@@ -112,6 +111,7 @@ input[type=range] {
     font-weight: 900;
     font-size: 1.1rem;
     border: 3px solid #4b3621;
+    margin-top: 10px;
 }
 </style>
 </head>
@@ -127,7 +127,6 @@ input[type=range] {
 <div class="main-layout">
 
 <div class="sidebar">
-
 <div class="control-group">
 <label>Machines (K̄) <span id="valK">50</span></label>
 <input type="range" id="Kbar" min="10" max="150" value="50">
@@ -149,17 +148,14 @@ input[type=range] {
 </div>
 
 <div class="price-zone">
-
 <div class="control-group">
 <label style="color:#d9480f">Wage (w) <span id="valW">40</span></label>
 <input type="range" id="Wage" min="10" max="150" value="40">
 </div>
-
 <div class="control-group">
 <label style="color:#087f5b">Rent (r) <span id="valR">20</span></label>
 <input type="range" id="Rent" min="5" max="100" value="20">
 </div>
-
 </div>
 </div>
 
@@ -175,13 +171,13 @@ input[type=range] {
 <div class="stat-card"><small>Output per Worker</small><span id="statYperL">0</span></div>
 <div class="stat-card"><small>Labor Share</small><span id="statLS">0%</span></div>
 <div class="stat-card"><small>Capital Share</small><span id="statKS">0%</span></div>
-<div id="statusMsg" class="status-badge">Adjust parameters</div>
 </div>
+
+<div id="statusMsg" class="status-badge">Adjust parameters to explore equilibrium</div>
 
 </div>
 
 <script>
-
 let chartL, chartK;
 
 function createChart(ctx,title,color){
@@ -212,7 +208,6 @@ function initCharts(){
 }
 
 function update(){
-
     const K=+Kbar.value;
     const L=+Lbar.value;
     const a=+Alpha.value;
@@ -242,8 +237,6 @@ function update(){
         dK.push({x:i,y:a*A*Math.pow(i,a-1)*Math.pow(L,1-a)});
     }
 
-    /* ---- TIGHT PROFESSIONAL SCALING ---- */
-
     const yMaxL=Math.max(MPL,w)*1.4;
     const yMaxK=Math.max(MPK,r)*1.4;
 
@@ -259,12 +252,18 @@ function update(){
     chartK.data.datasets[1].data=[{x:0,y:r},{x:150,y:r}];
     chartK.data.datasets[2].data=[{x:K,y:0},{x:K,y:yMaxK}];
     chartK.update();
+
+    // ----- EQUILIBRIUM STATUS -----
+    const equilibrium = Math.abs(w-MPL)<2 && Math.abs(r-MPK)<2;
+    statusMsg.innerText = equilibrium ? "General Equilibrium Achieved" : "Factor Markets Not Clearing";
+    statusMsg.style.background = equilibrium ? "#d3f9d8" : "#fff5f5";
+    statusMsg.style.color = equilibrium ? "#2b8a3e" : "#c92a2a";
+    statusMsg.style.borderColor = equilibrium ? "#2b8a3e" : "#c92a2a";
 }
 
 document.querySelectorAll("input").forEach(i=>i.addEventListener("input",update));
 window.onload=initCharts;
 
 </script>
-
 </body>
 </html>
