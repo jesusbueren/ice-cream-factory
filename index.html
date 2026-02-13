@@ -285,14 +285,22 @@ for(let i=1;i<=150;i++){
 /* ----- LABOR CHART ----- */
 chartL.data.datasets[0].data = dL;                 // MPL
 chartL.data.datasets[1].data = [{x:0,y:w},{x:150,y:w}]; // Wage line
-chartL.data.datasets[2].data = [{x:L,y:0},{x:L,y:200}]; // Vertical L̄
+
+const yMaxL = chartL.scales.y.max;  // Get current y-axis max
+chartL.data.datasets[2].data = [{x:L,y:0},{x:L,y:yMaxL}]; // Vertical L̄
+
 chartL.update();
+
 
 /* ----- CAPITAL CHART ----- */
 chartK.data.datasets[0].data = dK;                 // MPK
 chartK.data.datasets[1].data = [{x:0,y:r},{x:150,y:r}]; // Rent line
-chartK.data.datasets[2].data = [{x:K,y:0},{x:K,y:200}]; // Vertical K̄
+
+const yMaxK = chartK.scales.y.max;  // Get current y-axis max
+chartK.data.datasets[2].data = [{x:K,y:0},{x:K,y:yMaxK}]; // Vertical K̄
+
 chartK.update();
+
 
 }
 
