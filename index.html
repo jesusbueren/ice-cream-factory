@@ -227,7 +227,7 @@ function initCharts() {
             },
             scales: {
                 x: { type: 'linear', min: 1, max: 150 },
-                y: { beginAtZero: true }
+               y: { beginAtZero: true, suggestedMax: 150 }
             }
         }
     });
@@ -261,6 +261,15 @@ function update() {
     const Y = A * Math.pow(K, a) * Math.pow(L, 1-a);
     const MPL = (1-a) * A * Math.pow(K/L, a);
     const MPK = a * A * Math.pow(L/K, 1-a);
+
+    // Compute dynamic max values based on curves only
+    const maxMPL = Math.max(...dL.map(p => p.y));
+    const maxMPK = Math.max(...dK.map(p => p.y));
+    
+    // Set y-axis limits dynamically (with padding)
+    chartL.options.scales.y.max = maxMPL * 1.2;
+    chartK.options.scales.y.max = maxMPK * 1.2;
+
 
     statY.innerText = Math.round(Y).toLocaleString();
     statYperL.innerText = (Y/L).toFixed(2);
