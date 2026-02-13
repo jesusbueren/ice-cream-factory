@@ -214,7 +214,8 @@ function initCharts() {
         type: 'line',
         data: { datasets: [
             { label: 'Marginal Product', data: [], borderColor: color, borderWidth: 3, pointRadius: 0 },
-            { label: 'Price', data: [], borderColor: '#fab005', borderWidth: 2, pointRadius: 0 }
+            { label: 'Price', data: [], borderColor: '#fab005', borderWidth: 2, pointRadius: 0 },
+            { label: 'Supply', data: [], borderColor: '#4b3621', borderDash: [6,4], borderWidth: 2, pointRadius: 0 }
         ]},
         options: {
             responsive: true,
@@ -239,6 +240,7 @@ function initCharts() {
 
     update();
 }
+
 
 function update() {
 
@@ -275,18 +277,23 @@ function update() {
     statusMsg.style.borderColor = equilibrium ? "#2b8a3e" : "#c92a2a";
 
     let dL=[], dK=[];
-    for(let i=1;i<=150;i++){
-        dL.push({x:i,y:(1-a)*A*Math.pow(K,a)*Math.pow(i,-a)});
-        dK.push({x:i,y:a*A*Math.pow(i,a-1)*Math.pow(L,1-a)});
-    }
+for(let i=1;i<=150;i++){
+    dL.push({x:i,y:(1-a)*A*Math.pow(K,a)*Math.pow(i,-a)});
+    dK.push({x:i,y:a*A*Math.pow(i,a-1)*Math.pow(L,1-a)});
+}
 
-    chartL.data.datasets[0].data=dL;
-    chartL.data.datasets[1].data=[{x:0,y:w},{x:150,y:w}];
-    chartL.update();
+/* ----- LABOR CHART ----- */
+chartL.data.datasets[0].data = dL;                 // MPL
+chartL.data.datasets[1].data = [{x:0,y:w},{x:150,y:w}]; // Wage line
+chartL.data.datasets[2].data = [{x:L,y:0},{x:L,y:200}]; // Vertical L̄
+chartL.update();
 
-    chartK.data.datasets[0].data=dK;
-    chartK.data.datasets[1].data=[{x:0,y:r},{x:150,y:r}];
-    chartK.update();
+/* ----- CAPITAL CHART ----- */
+chartK.data.datasets[0].data = dK;                 // MPK
+chartK.data.datasets[1].data = [{x:0,y:r},{x:150,y:r}]; // Rent line
+chartK.data.datasets[2].data = [{x:K,y:0},{x:K,y:200}]; // Vertical K̄
+chartK.update();
+
 }
 
 document.querySelectorAll("input").forEach(i=>i.addEventListener("input",update));
