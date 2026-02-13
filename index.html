@@ -171,31 +171,11 @@ input[type=range] {
 </div>
 
 <div class="stats-bar">
-
-<div class="stat-card">
-<small>Total Output (Y)</small>
-<span id="statY">0</span>
-</div>
-
-<div class="stat-card">
-<small>Output per Worker (Y/L)</small>
-<span id="statYperL">0</span>
-</div>
-
-<div class="stat-card">
-<small>Labor Share</small>
-<span id="statLS">0%</span>
-</div>
-
-<div class="stat-card">
-<small>Capital Share</small>
-<span id="statKS">0%</span>
-</div>
-
-<div id="statusMsg" class="status-badge">
-Adjust parameters to explore equilibrium
-</div>
-
+<div class="stat-card"><small>Total Output (Y)</small><span id="statY">0</span></div>
+<div class="stat-card"><small>Output per Worker</small><span id="statYperL">0</span></div>
+<div class="stat-card"><small>Labor Share</small><span id="statLS">0%</span></div>
+<div class="stat-card"><small>Capital Share</small><span id="statKS">0%</span></div>
+<div id="statusMsg" class="status-badge">Adjust parameters</div>
 </div>
 
 </div>
@@ -204,7 +184,7 @@ Adjust parameters to explore equilibrium
 
 let chartL, chartK;
 
-function createChart(ctx, title, color){
+function createChart(ctx,title,color){
     return new Chart(ctx,{
         type:'line',
         data:{datasets:[
@@ -216,10 +196,7 @@ function createChart(ctx, title, color){
             responsive:true,
             maintainAspectRatio:false,
             animation:false,
-            plugins:{
-                legend:{display:false},
-                title:{display:true,text:title}
-            },
+            plugins:{legend:{display:false},title:{display:true,text:title}},
             scales:{
                 x:{type:'linear',min:1,max:150},
                 y:{beginAtZero:true}
@@ -229,8 +206,8 @@ function createChart(ctx, title, color){
 }
 
 function initCharts(){
-    chartL=createChart(document.getElementById('chartL'),"Marginal Product of Labor (MPL)","#ff6b6b");
-    chartK=createChart(document.getElementById('chartK'),"Marginal Product of Capital (MPK)","#20c997");
+    chartL=createChart(chartL=document.getElementById('chartL'),"MPL","#ff6b6b");
+    chartK=createChart(chartK=document.getElementById('chartK'),"MPK","#20c997");
     update();
 }
 
@@ -259,31 +236,28 @@ function update(){
     statLS.innerText=((w*L/Y)*100).toFixed(1)+"%";
     statKS.innerText=((r*K/Y)*100).toFixed(1)+"%";
 
-    const equilibrium=Math.abs(w-MPL)<2 && Math.abs(r-MPK)<2;
-    statusMsg.innerText=equilibrium?"General Equilibrium Achieved":"Factor Markets Not Clearing";
-    statusMsg.style.background=equilibrium?"#d3f9d8":"#fff5f5";
-    statusMsg.style.color=equilibrium?"#2b8a3e":"#c92a2a";
-
     let dL=[], dK=[];
     for(let i=1;i<=150;i++){
         dL.push({x:i,y:(1-a)*A*Math.pow(K,a)*Math.pow(i,-a)});
         dK.push({x:i,y:a*A*Math.pow(i,a-1)*Math.pow(L,1-a)});
     }
 
-    const maxMPL=Math.max(...dL.map(p=>p.y));
-    const maxMPK=Math.max(...dK.map(p=>p.y));
+    /* ---- TIGHT PROFESSIONAL SCALING ---- */
 
-    chartL.options.scales.y.max=maxMPL*1.2;
-    chartK.options.scales.y.max=maxMPK*1.2;
+    const yMaxL=Math.max(MPL,w)*1.4;
+    const yMaxK=Math.max(MPK,r)*1.4;
+
+    chartL.options.scales.y.max=yMaxL;
+    chartK.options.scales.y.max=yMaxK;
 
     chartL.data.datasets[0].data=dL;
     chartL.data.datasets[1].data=[{x:0,y:w},{x:150,y:w}];
-    chartL.data.datasets[2].data=[{x:L,y:0},{x:L,y:maxMPL*1.2}];
+    chartL.data.datasets[2].data=[{x:L,y:0},{x:L,y:yMaxL}];
     chartL.update();
 
     chartK.data.datasets[0].data=dK;
     chartK.data.datasets[1].data=[{x:0,y:r},{x:150,y:r}];
-    chartK.data.datasets[2].data=[{x:K,y:0},{x:K,y:maxMPK*1.2}];
+    chartK.data.datasets[2].data=[{x:K,y:0},{x:K,y:yMaxK}];
     chartK.update();
 }
 
