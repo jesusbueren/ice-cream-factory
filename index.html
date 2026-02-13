@@ -129,12 +129,12 @@ input[type=range] {
 <div class="sidebar">
 
 <div class="control-group">
-<label>Machines (K) <span id="valK">50</span></label>
+<label>Machines (K̄) <span id="valK">50</span></label>
 <input type="range" id="Kbar" min="10" max="150" value="50">
 </div>
 
 <div class="control-group">
-<label>Scoopers (L) <span id="valL">80</span></label>
+<label>Scoopers (L̄) <span id="valL">80</span></label>
 <input type="range" id="Lbar" min="10" max="150" value="80">
 </div>
 
@@ -164,12 +164,8 @@ input[type=range] {
 </div>
 
 <div class="chart-stack">
-<div class="chart-box">
-<canvas id="chartL"></canvas>
-</div>
-<div class="chart-box">
-<canvas id="chartK"></canvas>
-</div>
+<div class="chart-box"><canvas id="chartL"></canvas></div>
+<div class="chart-box"><canvas id="chartK"></canvas></div>
 </div>
 
 </div>
@@ -208,109 +204,87 @@ Adjust parameters to explore equilibrium
 
 let chartL, chartK;
 
-function initCharts() {
-
-    const config = (title, color) => ({
-        type: 'line',
-        data: { datasets: [
-            { label: 'Marginal Product', data: [], borderColor: color, borderWidth: 3, pointRadius: 0 },
-            { label: 'Price', data: [], borderColor: '#fab005', borderWidth: 2, pointRadius: 0 },
-            { label: 'Supply', data: [], borderColor: '#4b3621', borderDash: [6,4], borderWidth: 2, pointRadius: 0 }
+function createChart(ctx, title, color){
+    return new Chart(ctx,{
+        type:'line',
+        data:{datasets:[
+            {data:[],borderColor:color,borderWidth:3,pointRadius:0},
+            {data:[],borderColor:'#fab005',borderWidth:2,pointRadius:0},
+            {data:[],borderColor:'#000',borderDash:[6,4],borderWidth:2,pointRadius:0}
         ]},
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
-            plugins: {
-                legend: { display: false },
-                title: { display: true, text: title }
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            animation:false,
+            plugins:{
+                legend:{display:false},
+                title:{display:true,text:title}
             },
-            scales: {
-                x: { type: 'linear', min: 1, max: 150 },
-               y: { beginAtZero: true, suggestedMax: 150 }
+            scales:{
+                x:{type:'linear',min:1,max:150},
+                y:{beginAtZero:true}
             }
         }
     });
+}
 
-    chartL = new Chart(document.getElementById('chartL'),
-        config('Marginal Product of Labor (MPL)', '#ff8787'));
-
-    chartK = new Chart(document.getElementById('chartK'),
-        config('Marginal Product of Capital (MPK)', '#63e6be'));
-
+function initCharts(){
+    chartL=createChart(document.getElementById('chartL'),"Marginal Product of Labor (MPL)","#ff6b6b");
+    chartK=createChart(document.getElementById('chartK'),"Marginal Product of Capital (MPK)","#20c997");
     update();
 }
 
+function update(){
 
-function update() {
+    const K=+Kbar.value;
+    const L=+Lbar.value;
+    const a=+Alpha.value;
+    const A=+Prod.value;
+    const w=+Wage.value;
+    const r=+Rent.value;
 
-    const K = +Kbar.value;
-    const L = +Lbar.value;
-    const a = +Alpha.value;
-    const A = +Prod.value;
-    const w = +Wage.value;
-    const r = +Rent.value;
+    valK.innerText=K;
+    valL.innerText=L;
+    valAlpha.innerText=a.toFixed(2);
+    valA.innerText=A;
+    valW.innerText=w;
+    valR.innerText=r;
 
-    valK.innerText = K;
-    valL.innerText = L;
-    valAlpha.innerText = a.toFixed(2);
-    valA.innerText = A;
-    valW.innerText = w;
-    valR.innerText = r;
+    const Y=A*Math.pow(K,a)*Math.pow(L,1-a);
+    const MPL=(1-a)*A*Math.pow(K,a)*Math.pow(L,-a);
+    const MPK=a*A*Math.pow(K,a-1)*Math.pow(L,1-a);
 
-    const Y = A * Math.pow(K, a) * Math.pow(L, 1-a);
-    const MPL = (1-a) * A * Math.pow(K/L, a);
-    const MPK = a * A * Math.pow(L/K, 1-a);
+    statY.innerText=Math.round(Y).toLocaleString();
+    statYperL.innerText=(Y/L).toFixed(2);
+    statLS.innerText=((w*L/Y)*100).toFixed(1)+"%";
+    statKS.innerText=((r*K/Y)*100).toFixed(1)+"%";
 
-    // Compute dynamic max values based on curves only
-    const maxMPL = Math.max(...dL.map(p => p.y));
-    const maxMPK = Math.max(...dK.map(p => p.y));
-    
-    // Set y-axis limits dynamically (with padding)
-    chartL.options.scales.y.max = maxMPL * 1.2;
-    chartK.options.scales.y.max = maxMPK * 1.2;
-
-
-    statY.innerText = Math.round(Y).toLocaleString();
-    statYperL.innerText = (Y/L).toFixed(2);
-    statLS.innerText = ((w*L/Y)*100).toFixed(1)+"%";
-    statKS.innerText = ((r*K/Y)*100).toFixed(1)+"%";
-
-    const equilibrium = Math.abs(w-MPL)<2 && Math.abs(r-MPK)<2;
-    statusMsg.innerText = equilibrium ?
-        "General Equilibrium Achieved" :
-        "Factor Markets Not Clearing";
-
-    statusMsg.style.background = equilibrium ? "#d3f9d8" : "#fff5f5";
-    statusMsg.style.color = equilibrium ? "#2b8a3e" : "#c92a2a";
-    statusMsg.style.borderColor = equilibrium ? "#2b8a3e" : "#c92a2a";
+    const equilibrium=Math.abs(w-MPL)<2 && Math.abs(r-MPK)<2;
+    statusMsg.innerText=equilibrium?"General Equilibrium Achieved":"Factor Markets Not Clearing";
+    statusMsg.style.background=equilibrium?"#d3f9d8":"#fff5f5";
+    statusMsg.style.color=equilibrium?"#2b8a3e":"#c92a2a";
 
     let dL=[], dK=[];
-for(let i=1;i<=150;i++){
-    dL.push({x:i,y:(1-a)*A*Math.pow(K,a)*Math.pow(i,-a)});
-    dK.push({x:i,y:a*A*Math.pow(i,a-1)*Math.pow(L,1-a)});
-}
+    for(let i=1;i<=150;i++){
+        dL.push({x:i,y:(1-a)*A*Math.pow(K,a)*Math.pow(i,-a)});
+        dK.push({x:i,y:a*A*Math.pow(i,a-1)*Math.pow(L,1-a)});
+    }
 
-/* ----- LABOR CHART ----- */
-chartL.data.datasets[0].data = dL;                 // MPL
-chartL.data.datasets[1].data = [{x:0,y:w},{x:150,y:w}]; // Wage line
+    const maxMPL=Math.max(...dL.map(p=>p.y));
+    const maxMPK=Math.max(...dK.map(p=>p.y));
 
-const yMaxL = chartL.scales.y.max;  // Get current y-axis max
-chartL.data.datasets[2].data = [{x:L,y:0},{x:L,y:yMaxL}]; // Vertical L̄
+    chartL.options.scales.y.max=maxMPL*1.2;
+    chartK.options.scales.y.max=maxMPK*1.2;
 
-chartL.update();
+    chartL.data.datasets[0].data=dL;
+    chartL.data.datasets[1].data=[{x:0,y:w},{x:150,y:w}];
+    chartL.data.datasets[2].data=[{x:L,y:0},{x:L,y:maxMPL*1.2}];
+    chartL.update();
 
-
-/* ----- CAPITAL CHART ----- */
-chartK.data.datasets[0].data = dK;                 // MPK
-chartK.data.datasets[1].data = [{x:0,y:r},{x:150,y:r}]; // Rent line
-
-const yMaxK = chartK.scales.y.max;  // Get current y-axis max
-chartK.data.datasets[2].data = [{x:K,y:0},{x:K,y:yMaxK}]; // Vertical K̄
-
-chartK.update();
-
-
+    chartK.data.datasets[0].data=dK;
+    chartK.data.datasets[1].data=[{x:0,y:r},{x:150,y:r}];
+    chartK.data.datasets[2].data=[{x:K,y:0},{x:K,y:maxMPK*1.2}];
+    chartK.update();
 }
 
 document.querySelectorAll("input").forEach(i=>i.addEventListener("input",update));
