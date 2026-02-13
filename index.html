@@ -252,8 +252,8 @@ function update(){
     statKS.innerText=((r*K/Y)*100).toFixed(1)+"%";
 
     // Equations
-    eqL.innerHTML = `MPL = (1-${a}) * ${A} * (K^${a}) / (L^${a})`;
-    eqK.innerHTML = `MPK = ${a} * ${A} * (L^${(1-a).toFixed(2)}) / (K^${(1-a).toFixed(2)})`;
+    eqL.innerHTML = `MPL = (1-${a}) * ${A} * (K/L)^${a}) `;
+    eqK.innerHTML = `MPK = ${a} * ${A} * (L/K)^${(1-a).toFixed(2)})`;
 
     let dL=[], dK=[];
     for(let i=1;i<=150;i++){
