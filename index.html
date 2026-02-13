@@ -1,255 +1,298 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scoop-Master 3000: Equilibrium Status</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
-        
-        * { box-sizing: border-box; }
-        
-        body { 
-            font-family: 'Space Grotesk', sans-serif; 
-            background: #fdf2f8; margin: 0; padding: 20px;
-            display: flex; justify-content: center; overflow-x: hidden;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scoop-Master Simulator</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        .app-container { 
-            width: 1000px; 
-            max-width: 1000px;
-            background: #ffffff;
-            border-radius: 24px;
-            padding: 30px;
-            border: 4px solid #4b3621;
-            box-shadow: 12px 12px 0px #ffc9c9;
-        }
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
 
-        .header { text-align: center; margin-bottom: 25px; }
-        .header h1 { margin: 0; font-weight: 800; color: #4b3621; text-transform: uppercase; }
+* { box-sizing: border-box; }
 
-        .main-layout { display: grid; grid-template-columns: 320px 1fr; gap: 30px; }
+body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: #fdf2f8;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
 
-        .sidebar { background: #fff9db; padding: 20px; border-radius: 16px; border: 2px solid #4b3621; }
-        .control-group { margin-bottom: 18px; }
-        .control-group label { 
-            display: flex; justify-content: space-between; 
-            font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; 
-        }
-        input[type=range] { width: 100%; cursor: pointer; accent-color: #4b3621; }
+.app-container {
+    width: 1000px;
+    background: white;
+    border-radius: 24px;
+    padding: 30px;
+    border: 4px solid #4b3621;
+    box-shadow: 12px 12px 0px #ffc9c9;
+}
 
-        .price-zone { 
-            border-top: 2px dashed #4b3621; padding-top: 15px; margin-top: 15px;
-        }
+.header { text-align: center; margin-bottom: 25px; }
+.header h1 { margin: 0; font-weight: 800; color: #4b3621; }
 
-        .chart-stack { display: flex; flex-direction: column; gap: 20px; }
-        .chart-box { 
-            height: 280px; 
-            width: 100%; 
-            position: relative; 
-            border: 2px solid #eee; 
-            border-radius: 12px;
-            padding: 10px;
-            background: #fff;
-        }
+.main-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 30px;
+}
 
-        .eq-overlay {
-            position: absolute;
-            top: 50px; 
-            right: 20px;
-            background: rgba(255, 255, 255, 0.85); 
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid #4b3621;
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: 700;
-            font-size: 0.75rem;
-            color: #4b3621;
-            pointer-events: none;
-            z-index: 10;
-        }
+.sidebar {
+    background: #fff9db;
+    padding: 20px;
+    border-radius: 16px;
+    border: 2px solid #4b3621;
+}
 
-        .stats-bar { 
-            display: grid; grid-template-columns: repeat(4, 1fr); 
-            gap: 15px; margin-top: 30px; 
-        }
-        .stat-card { 
-            background: #4b3621; color: white; padding: 15px; 
-            border-radius: 12px; text-align: center; 
-        }
-        .stat-card small { display: block; font-size: 0.6rem; text-transform: uppercase; opacity: 0.8; }
-        .stat-card span { font-size: 1.1rem; font-weight: 700; }
-        
-        .status-badge { 
-            grid-column: span 4; 
-            padding: 15px; 
-            border-radius: 12px; 
-            text-align: center; 
-            font-weight: 900; 
-            font-size: 1.2rem;
-            border: 3px solid #4b3621;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.2s ease;
-        }
-    </style>
+.control-group { margin-bottom: 18px; }
+.control-group label {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+input[type=range] {
+    width: 100%;
+    cursor: pointer;
+    accent-color: #4b3621;
+}
+
+.price-zone {
+    border-top: 2px dashed #4b3621;
+    padding-top: 15px;
+    margin-top: 15px;
+}
+
+.chart-stack { display: flex; flex-direction: column; gap: 20px; }
+
+.chart-box {
+    height: 280px;
+    position: relative;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    padding: 10px;
+    background: #fff;
+}
+
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.stat-card {
+    background: #4b3621;
+    color: white;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.stat-card small {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.stat-card span {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.status-badge {
+    grid-column: span 4;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 1.1rem;
+    border: 3px solid #4b3621;
+}
+</style>
 </head>
+
 <body>
 
 <div class="app-container">
-    <div class="header">
-        <h1>🍦 Scoop-Master Simulator</h1>
-    </div>
 
-    <div class="main-layout">
-        <div class="sidebar">
-            <div class="control-group">
-                <label>Machines (K) <span id="valK">50</span></label>
-                <input type="range" id="Kbar" min="10" max="100" value="50">
-            </div>
-            <div class="control-group">
-                <label>Scoopers (L) <span id="valL">80</span></label>
-                <input type="range" id="Lbar" min="10" max="100" value="80">
-            </div>
-            <div class="control-group">
-                <label>Technology (α) <span id="valA">0.30</span></label>
-                <input type="range" id="Alpha" min="0.1" max="0.9" step="0.05" value="0.30">
-            </div>
+<div class="header">
+<h1>🍦 Scoop-Master Simulator</h1>
+</div>
 
-            <div class="price-zone">
-                <div class="control-group">
-                    <label style="color:#d9480f">Wage (w) <span id="valW">40</span></label>
-                    <input type="range" id="Wage" min="10" max="150" value="40">
-                </div>
-                <div class="control-group">
-                    <label style="color:#087f5b">Rent (r) <span id="valR">20</span></label>
-                    <input type="range" id="Rent" min="5" max="100" value="20">
-                </div>
-            </div>
-        </div>
+<div class="main-layout">
 
-        <div class="chart-stack">
-            <div class="chart-box">
-                <div id="eqL" class="eq-overlay">MPL = ...</div>
-                <canvas id="chartL"></canvas>
-            </div>
-            <div class="chart-box">
-                <div id="eqK" class="eq-overlay">MPK = ...</div>
-                <canvas id="chartK"></canvas>
-            </div>
-        </div>
-    </div>
+<div class="sidebar">
 
-    <div class="stats-bar">
-        <div class="stat-card">
-            <small>Total Production (Y)</small>
-            <span id="statY">0</span>
-        </div>
-        <div class="stat-card">
-            <small>Labor Share</small>
-            <span id="statLS">0%</span>
-        </div>
-        <div class="stat-card">
-            <small>Capital Share</small>
-            <span id="statKS">0%</span>
-        </div>
-        <div class="stat-card">
-            <small>Total A</small>
-            <span>100</span>
-        </div>
-        <div id="statusMsg" class="status-badge">Calculating Market Forces...</div>
-    </div>
+<div class="control-group">
+<label>Machines (K) <span id="valK">50</span></label>
+<input type="range" id="Kbar" min="10" max="150" value="50">
+</div>
+
+<div class="control-group">
+<label>Scoopers (L) <span id="valL">80</span></label>
+<input type="range" id="Lbar" min="10" max="150" value="80">
+</div>
+
+<div class="control-group">
+<label>Capital Share (α) <span id="valAlpha">0.30</span></label>
+<input type="range" id="Alpha" min="0.1" max="0.9" step="0.05" value="0.30">
+</div>
+
+<div class="control-group">
+<label>Productivity (A) <span id="valA">100</span></label>
+<input type="range" id="Prod" min="20" max="200" step="5" value="100">
+</div>
+
+<div class="price-zone">
+
+<div class="control-group">
+<label style="color:#d9480f">Wage (w) <span id="valW">40</span></label>
+<input type="range" id="Wage" min="10" max="150" value="40">
+</div>
+
+<div class="control-group">
+<label style="color:#087f5b">Rent (r) <span id="valR">20</span></label>
+<input type="range" id="Rent" min="5" max="100" value="20">
+</div>
+
+</div>
+</div>
+
+<div class="chart-stack">
+<div class="chart-box">
+<canvas id="chartL"></canvas>
+</div>
+<div class="chart-box">
+<canvas id="chartK"></canvas>
+</div>
+</div>
+
+</div>
+
+<div class="stats-bar">
+
+<div class="stat-card">
+<small>Total Output (Y)</small>
+<span id="statY">0</span>
+</div>
+
+<div class="stat-card">
+<small>Output per Worker (Y/L)</small>
+<span id="statYperL">0</span>
+</div>
+
+<div class="stat-card">
+<small>Labor Share</small>
+<span id="statLS">0%</span>
+</div>
+
+<div class="stat-card">
+<small>Capital Share</small>
+<span id="statKS">0%</span>
+</div>
+
+<div id="statusMsg" class="status-badge">
+Adjust parameters to explore equilibrium
+</div>
+
+</div>
+
 </div>
 
 <script>
-    const A = 100;
-    let chartL, chartK;
 
-    function init() {
-        const config = (title, color) => ({
-            type: 'line',
-            data: {
-                datasets: [
-                    { label: 'Marginal Product', data: [], borderColor: color, borderWidth: 4, pointRadius: 0, tension: 0.1 },
-                    { label: 'Supply', data: [], borderColor: '#4b3621', borderDash: [6,3], pointRadius: 0, borderWidth: 2 },
-                    { label: 'Price', data: [], borderColor: '#fab005', borderWidth: 3, pointRadius: 0 }
-                ]
+let chartL, chartK;
+
+function initCharts() {
+
+    const config = (title, color) => ({
+        type: 'line',
+        data: { datasets: [
+            { label: 'Marginal Product', data: [], borderColor: color, borderWidth: 3, pointRadius: 0 },
+            { label: 'Price', data: [], borderColor: '#fab005', borderWidth: 2, pointRadius: 0 }
+        ]},
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: title }
             },
-            options: {
-                responsive: true, maintainAspectRatio: false, animation: false,
-                plugins: { legend: { display: false }, title: { display: true, text: title, font: {size: 14, weight: 'bold'} } },
-                scales: {
-                    x: { type: 'linear', min: 0, max: 100 },
-                    y: { beginAtZero: true, max: 160 }
-                }
+            scales: {
+                x: { type: 'linear', min: 1, max: 150 },
+                y: { beginAtZero: true }
             }
-        });
+        }
+    });
 
-        chartL = new Chart(document.getElementById('chartL'), config('Marginal Product of Labor (MPL)', '#ff8787'));
-        chartK = new Chart(document.getElementById('chartK'), config('Marginal Product of Capital (MPK)', '#63e6be'));
-        update();
+    chartL = new Chart(document.getElementById('chartL'),
+        config('Marginal Product of Labor (MPL)', '#ff8787'));
+
+    chartK = new Chart(document.getElementById('chartK'),
+        config('Marginal Product of Capital (MPK)', '#63e6be'));
+
+    update();
+}
+
+function update() {
+
+    const K = +Kbar.value;
+    const L = +Lbar.value;
+    const a = +Alpha.value;
+    const A = +Prod.value;
+    const w = +Wage.value;
+    const r = +Rent.value;
+
+    valK.innerText = K;
+    valL.innerText = L;
+    valAlpha.innerText = a.toFixed(2);
+    valA.innerText = A;
+    valW.innerText = w;
+    valR.innerText = r;
+
+    const Y = A * Math.pow(K, a) * Math.pow(L, 1-a);
+    const MPL = (1-a) * A * Math.pow(K/L, a);
+    const MPK = a * A * Math.pow(L/K, 1-a);
+
+    statY.innerText = Math.round(Y).toLocaleString();
+    statYperL.innerText = (Y/L).toFixed(2);
+    statLS.innerText = ((w*L/Y)*100).toFixed(1)+"%";
+    statKS.innerText = ((r*K/Y)*100).toFixed(1)+"%";
+
+    const equilibrium = Math.abs(w-MPL)<2 && Math.abs(r-MPK)<2;
+    statusMsg.innerText = equilibrium ?
+        "General Equilibrium Achieved" :
+        "Factor Markets Not Clearing";
+
+    statusMsg.style.background = equilibrium ? "#d3f9d8" : "#fff5f5";
+    statusMsg.style.color = equilibrium ? "#2b8a3e" : "#c92a2a";
+    statusMsg.style.borderColor = equilibrium ? "#2b8a3e" : "#c92a2a";
+
+    let dL=[], dK=[];
+    for(let i=1;i<=150;i++){
+        dL.push({x:i,y:(1-a)*A*Math.pow(K,a)*Math.pow(i,-a)});
+        dK.push({x:i,y:a*A*Math.pow(i,a-1)*Math.pow(L,1-a)});
     }
 
-    function update() {
-        const K = parseFloat(document.getElementById('Kbar').value);
-        const L = parseFloat(document.getElementById('Lbar').value);
-        const a = parseFloat(document.getElementById('Alpha').value);
-        const w = parseFloat(document.getElementById('Wage').value);
-        const r = parseFloat(document.getElementById('Rent').value);
+    chartL.data.datasets[0].data=dL;
+    chartL.data.datasets[1].data=[{x:0,y:w},{x:150,y:w}];
+    chartL.update();
 
-        document.getElementById('valK').innerText = K;
-        document.getElementById('valL').innerText = L;
-        document.getElementById('valA').innerText = a.toFixed(2);
-        document.getElementById('valW').innerText = w;
-        document.getElementById('valR').innerText = r;
+    chartK.data.datasets[0].data=dK;
+    chartK.data.datasets[1].data=[{x:0,y:r},{x:150,y:r}];
+    chartK.update();
+}
 
-        document.getElementById('eqL').innerHTML = `MPL = (1-${a}) * 100 * (K/L)<sup>${a}</sup>`;
-        document.getElementById('eqK').innerHTML = `MPK = ${a} * 100 * (L/K)<sup>${(1-a).toFixed(2)}</sup>`;
+document.querySelectorAll("input").forEach(i=>i.addEventListener("input",update));
+window.onload=initCharts;
 
-        const Y = A * Math.pow(K, a) * Math.pow(L, 1-a);
-        const MPL = (1-a) * A * Math.pow(K/L, a);
-        const MPK = a * A * Math.pow(L/K, 1-a);
-
-        document.getElementById('statY').innerText = Math.round(Y).toLocaleString();
-        document.getElementById('statLS').innerText = ((w * L / Y) * 100).toFixed(0) + "%";
-        document.getElementById('statKS').innerText = ((r * K / Y) * 100).toFixed(0) + "%";
-
-        // EQUILIBRIUM STATUS LOGIC
-        const isEquil = Math.abs(w-MPL) < 3 && Math.abs(r-MPK) < 2;
-        const badge = document.getElementById('statusMsg');
-        
-        if (isEquil) {
-            badge.innerText = "Equilibrium Reached";
-            badge.style.background = "#d3f9d8"; // Light green
-            badge.style.color = "#2b8a3e";      // Dark green
-            badge.style.borderColor = "#2b8a3e";
-        } else {
-            badge.innerText = "Economy Not In Equilibrium";
-            badge.style.background = "#fff5f5"; // Light red
-            badge.style.color = "#c92a2a";      // Dark red
-            badge.style.borderColor = "#c92a2a";
-        }
-
-        let dL = [], dK = [];
-        for(let i=1; i<=100; i++) {
-            dL.push({x: i, y: (1-a) * A * Math.pow(K, a) * Math.pow(i, -a)});
-            dK.push({x: i, y: a * A * Math.pow(i, a-1) * Math.pow(L, 1-a)});
-        }
-
-        chartL.data.datasets[0].data = dL;
-        chartL.data.datasets[1].data = [{x: L, y: 0}, {x: L, y: 160}]; 
-        chartL.data.datasets[2].data = [{x: 0, y: w}, {x: 100, y: w}];
-        chartL.update();
-
-        chartK.data.datasets[0].data = dK;
-        chartK.data.datasets[1].data = [{x: K, y: 0}, {x: K, y: 160}];
-        chartK.data.datasets[2].data = [{x: 0, y: r}, {x: 100, y: r}];
-        chartK.update();
-    }
-
-    document.querySelectorAll('input').forEach(i => i.addEventListener('input', update));
-    window.onload = init;
 </script>
+
 </body>
 </html>
