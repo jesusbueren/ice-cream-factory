@@ -45,6 +45,116 @@ body {
     border: 2px solid #4b3621;
 }
 
+.fixed-params {
+    background: #fff3bf;
+    border: 2px dashed #4b3621;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.fixed-params h2 {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+    color: #4b3621;
+}
+
+.param-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+.param-row:last-child {
+    margin-bottom: 0;
+}
+
+.overbar {
+    text-decoration: overline;
+    text-decoration-thickness: 2px;
+}
+
+.step-panel {
+    background: #fff3bf;
+    border: 2px solid #4b3621;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 14px;
+}
+
+.step-panel h3 {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+    color: #4b3621;
+}
+
+.step-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.step-buttons button {
+    border: 2px solid #4b3621;
+    border-radius: 10px;
+    background: #fff;
+    color: #4b3621;
+    font-weight: 700;
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+.step-buttons button.active {
+    background: #4b3621;
+    color: #fff;
+}
+
+.compare-panel {
+    margin-top: 14px;
+    border: 2px solid #4b3621;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fff9db;
+}
+
+.compare-panel h3 {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+    color: #4b3621;
+}
+
+.compare-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.compare-cell {
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    background: #fff;
+    padding: 8px;
+}
+
+.compare-cell small {
+    display: block;
+    color: #495057;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+.compare-cell span {
+    font-weight: 700;
+    color: #212529;
+}
+
+.scenario-note {
+    margin: 10px 0 0;
+    font-size: 0.8rem;
+    color: #4b3621;
+}
+
 .control-group { margin-bottom: 18px; }
 .control-group label {
     display: flex;
@@ -148,8 +258,8 @@ input[type=range]:focus-visible::-moz-range-thumb {
 
 .eq-overlay {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 38px;
+    right: 10px;
     font-family: 'Courier New', Courier, monospace;
     font-weight: 700;
     font-size: 0.85rem;
@@ -236,6 +346,23 @@ input[type=range]:focus-visible::-moz-range-thumb {
         padding: 14px;
     }
 
+    .fixed-params h2 {
+        font-size: 0.84rem;
+    }
+
+    .step-panel h3,
+    .compare-panel h3 {
+        font-size: 0.84rem;
+    }
+
+    .param-row {
+        font-size: 0.78rem;
+    }
+
+    .compare-grid {
+        grid-template-columns: 1fr;
+    }
+
     .control-group {
         margin-bottom: 14px;
     }
@@ -300,24 +427,23 @@ input[type=range]:focus-visible::-moz-range-thumb {
 <div class="main-layout">
 
 <div class="sidebar">
-<div class="control-group">
-<label>Machines (K̄) <span id="valK">50</span></label>
-<input type="range" id="Kbar" min="10" max="150" value="50">
+<div class="fixed-params">
+<h2>Fixed Production Parameters</h2>
+<div class="param-row"><span>Machines (<span class="overbar">K</span>)</span><strong id="valK">60</strong></div>
+<div class="param-row"><span>Scoopers (<span class="overbar">L</span>)</span><strong id="valL">80</strong></div>
+<div class="param-row"><span>Capital Share (α)</span><strong id="valAlpha">0.30</strong></div>
+<div class="param-row"><span>Productivity (A)</span><strong id="valA">100</strong></div>
 </div>
 
-<div class="control-group">
-<label>Scoopers (L̄) <span id="valL">80</span></label>
-<input type="range" id="Lbar" min="10" max="150" value="80">
+<div class="step-panel">
+<h3>Class Exercise Steps</h3>
+<div class="step-buttons">
+<button id="saveBaselineBtn" type="button">Step 1: Save baseline equilibrium</button>
+<button id="step2Btn" type="button">Step 2: Apply labor shock (L̄ -50%)</button>
+<button id="step3Btn" type="button">Step 3: Apply productivity shock (A +50%)</button>
+<button id="resetScenarioBtn" type="button">Reset to baseline scenario</button>
 </div>
-
-<div class="control-group">
-<label>Capital Share (α) <span id="valAlpha">0.30</span></label>
-<input type="range" id="Alpha" min="0.1" max="0.9" step="0.05" value="0.30">
-</div>
-
-<div class="control-group">
-<label>Productivity (A) <span id="valA">100</span></label>
-<input type="range" id="Prod" min="20" max="200" step="5" value="100">
+<p id="scenarioNote" class="scenario-note">Start in Step 1 and save your baseline after finding market-clearing w and r.</p>
 </div>
 
 <div class="price-zone">
@@ -352,12 +478,41 @@ input[type=range]:focus-visible::-moz-range-thumb {
 <div class="stat-card"><small>Capital Share</small><span id="statKS">0%</span></div>
 </div>
 
-<div id="statusMsg" class="status-badge">Adjust parameters to explore equilibrium</div>
+<div id="statusMsg" class="status-badge">Adjust wages and rent to explore equilibrium</div>
+
+<div class="compare-panel">
+<h3>Before vs After (Equilibrium Guess)</h3>
+<div class="compare-grid">
+<div class="compare-cell"><small>Baseline w*</small><span id="baseW">—</span></div>
+<div class="compare-cell"><small>Current w</small><span id="currW">—</span></div>
+<div class="compare-cell"><small>Baseline r*</small><span id="baseR">—</span></div>
+<div class="compare-cell"><small>Current r</small><span id="currR">—</span></div>
+<div class="compare-cell"><small>Baseline Total Output</small><span id="baseY">—</span></div>
+<div class="compare-cell"><small>Current Total Output</small><span id="currY">—</span></div>
+<div class="compare-cell"><small>Baseline Output per Worker</small><span id="baseYperL">—</span></div>
+<div class="compare-cell"><small>Current Output per Worker</small><span id="currYperL">—</span></div>
+<div class="compare-cell"><small>Baseline Labor Share</small><span id="baseLS">—</span></div>
+<div class="compare-cell"><small>Current Labor Share</small><span id="currLS">—</span></div>
+<div class="compare-cell"><small>Δw (Current - Baseline)</small><span id="deltaW">—</span></div>
+<div class="compare-cell"><small>Δr (Current - Baseline)</small><span id="deltaR">—</span></div>
+</div>
+</div>
 
 </div>
 
 <script>
 let chartL, chartK;
+const FIXED = { K: 60, baseL: 80, alpha: 0.3, A: 100 };
+let scenarioMode = "baseline";
+let baselineSnapshot = null;
+
+function getLaborSupply(){
+    return scenarioMode === "laborShock" ? FIXED.baseL * 0.5 : FIXED.baseL;
+}
+
+function getProductivity(){
+    return scenarioMode === "productivityShock" ? FIXED.A * 1.5 : FIXED.A;
+}
 
 function createChart(ctx,title,color){
     return new Chart(ctx,{
@@ -383,16 +538,102 @@ function createChart(ctx,title,color){
 function initCharts(){
     chartL=createChart(chartL=document.getElementById('chartL'),"MPL","#ff6b6b");
     chartK=createChart(chartK=document.getElementById('chartK'),"MPK","#20c997");
+    saveBaselineBtn.addEventListener("click", saveBaseline);
+    step2Btn.addEventListener("click", activateStep2);
+    step3Btn.addEventListener("click", activateStep3);
+    resetScenarioBtn.addEventListener("click", resetScenario);
+    refreshStepButtons();
     update();
 }
 
-function update(){
-    const K=+Kbar.value;
-    const L=+Lbar.value;
-    const a=+Alpha.value;
-    const A=+Prod.value;
+function refreshStepButtons(){
+    step2Btn.classList.toggle("active", scenarioMode === "laborShock");
+    step3Btn.classList.toggle("active", scenarioMode === "productivityShock");
+}
+
+function saveBaseline(){
+    const state = getState();
+    if (scenarioMode !== "baseline") {
+        scenarioNote.innerText = "Reset first, then save baseline in Step 1 before applying the shock.";
+        return;
+    }
+    baselineSnapshot = {
+        w: state.w,
+        r: state.r,
+        Y: state.Y,
+        YperL: state.Y/state.L,
+        LS: (state.w*state.L/state.Y)*100
+    };
+    scenarioNote.innerText = "Baseline saved. Now click Step 2 and re-find market-clearing w and r with lower labor supply.";
+    updateComparison(state);
+}
+
+function activateStep2(){
+    scenarioMode = "laborShock";
+    scenarioNote.innerText = "Step 2 active: labor supply falls by 50% (L̄: 80 → 40). Adjust w and r to find the new equilibrium.";
+    refreshStepButtons();
+    update();
+}
+
+function activateStep3(){
+    scenarioMode = "productivityShock";
+    scenarioNote.innerText = "Step 3 active: productivity rises by 50% (A: 100 → 150). Adjust w and r to find the new equilibrium.";
+    refreshStepButtons();
+    update();
+}
+
+function resetScenario(){
+    scenarioMode = "baseline";
+    scenarioNote.innerText = "Baseline scenario restored (L̄: 80). You can save a new baseline equilibrium.";
+    refreshStepButtons();
+    update();
+}
+
+function getState(){
+    const K=FIXED.K;
+    const L=getLaborSupply();
+    const a=FIXED.alpha;
+    const A=getProductivity();
     const w=+Wage.value;
     const r=+Rent.value;
+
+    const Y=A*Math.pow(K,a)*Math.pow(L,1-a);
+    const MPL=(1-a)*A*Math.pow(K,a)*Math.pow(L,-a);
+    const MPK=a*A*Math.pow(K,a-1)*Math.pow(L,1-a);
+    const equilibrium = Math.abs(w-MPL)<2 && Math.abs(r-MPK)<2;
+
+    return { K, L, a, A, w, r, Y, MPL, MPK, equilibrium };
+}
+
+function updateComparison(state){
+    currW.innerText = state.w.toFixed(1);
+    currR.innerText = state.r.toFixed(1);
+    currY.innerText = Math.round(state.Y).toLocaleString();
+    currYperL.innerText = (state.Y/state.L).toFixed(2);
+    currLS.innerText = ((state.w*state.L/state.Y)*100).toFixed(1) + "%";
+
+    if(!baselineSnapshot){
+        baseW.innerText = "—";
+        baseR.innerText = "—";
+        baseY.innerText = "—";
+        baseYperL.innerText = "—";
+        baseLS.innerText = "—";
+        deltaW.innerText = "—";
+        deltaR.innerText = "—";
+        return;
+    }
+
+    baseW.innerText = baselineSnapshot.w.toFixed(1);
+    baseR.innerText = baselineSnapshot.r.toFixed(1);
+    baseY.innerText = Math.round(baselineSnapshot.Y).toLocaleString();
+    baseYperL.innerText = baselineSnapshot.YperL.toFixed(2);
+    baseLS.innerText = baselineSnapshot.LS.toFixed(1) + "%";
+    deltaW.innerText = (state.w-baselineSnapshot.w).toFixed(1);
+    deltaR.innerText = (state.r-baselineSnapshot.r).toFixed(1);
+}
+
+function update(){
+    const { K, L, a, A, w, r, Y, MPL, MPK, equilibrium } = getState();
 
     valK.innerText=K;
     valL.innerText=L;
@@ -401,18 +642,15 @@ function update(){
     valW.innerText=w;
     valR.innerText=r;
 
-    const Y=A*Math.pow(K,a)*Math.pow(L,1-a);
-    const MPL=(1-a)*A*Math.pow(K,a)*Math.pow(L,-a);
-    const MPK=a*A*Math.pow(K,a-1)*Math.pow(L,1-a);
-
     statY.innerText=Math.round(Y).toLocaleString();
     statYperL.innerText=(Y/L).toFixed(2);
     statLS.innerText=((w*L/Y)*100).toFixed(1)+"%";
     statKS.innerText=((r*K/Y)*100).toFixed(1)+"%";
+    updateComparison({ K, L, a, A, w, r, Y });
 
     // Equations
-    eqL.innerHTML = `MPL = (1-${a}) * ${A} * (K/L)^${a}) `;
-    eqK.innerHTML = `MPK = ${a} * ${A} * (L/K)^{(1-$a))})`;
+    eqL.innerHTML = `MPL = (1 - ${a.toFixed(2)}) × ${A} × (K/L)<sup>${a.toFixed(2)}</sup>`;
+    eqK.innerHTML = `MPK = ${a.toFixed(2)} × ${A} × (L/K)<sup>${(1-a).toFixed(2)}</sup>`;
 
     let dL=[], dK=[];
     for(let i=1;i<=150;i++){
@@ -420,25 +658,26 @@ function update(){
         dK.push({x:i,y:a*A*Math.pow(i,a-1)*Math.pow(L,1-a)});
     }
 
-    const yMaxL=Math.max(MPL,w)*1.4;
-    const yMaxK=Math.max(MPK,r)*1.4;
+    const fixedYMax = 170;
 
-    chartL.options.scales.y.max=yMaxL;
-    chartK.options.scales.y.max=yMaxK;
+    chartL.options.scales.y.max=fixedYMax;
+    chartK.options.scales.y.max=fixedYMax;
 
     chartL.data.datasets[0].data=dL;
     chartL.data.datasets[1].data=[{x:0,y:w},{x:150,y:w}];
-    chartL.data.datasets[2].data=[{x:L,y:0},{x:L,y:yMaxL}];
+    chartL.data.datasets[2].data=[{x:L,y:0},{x:L,y:fixedYMax}];
     chartL.update();
 
     chartK.data.datasets[0].data=dK;
     chartK.data.datasets[1].data=[{x:0,y:r},{x:150,y:r}];
-    chartK.data.datasets[2].data=[{x:K,y:0},{x:K,y:yMaxK}];
+    chartK.data.datasets[2].data=[{x:K,y:0},{x:K,y:fixedYMax}];
     chartK.update();
 
     // ----- EQUILIBRIUM STATUS -----
-    const equilibrium = Math.abs(w-MPL)<2 && Math.abs(r-MPK)<2;
-    statusMsg.innerText = equilibrium ? "General Equilibrium Achieved" : "Factor Markets Not Clearing";
+    const scenarioPrefix = scenarioMode === "laborShock"
+        ? "Step 2 (L̄ -50%): "
+        : (scenarioMode === "productivityShock" ? "Step 3 (A +50%): " : "Step 1: ");
+    statusMsg.innerText = scenarioPrefix + (equilibrium ? "General Equilibrium Achieved" : "Factor Markets Not Clearing");
     statusMsg.style.background = equilibrium ? "#d3f9d8" : "#fff5f5";
     statusMsg.style.color = equilibrium ? "#2b8a3e" : "#c92a2a";
     statusMsg.style.borderColor = equilibrium ? "#2b8a3e" : "#c92a2a";
