@@ -270,6 +270,43 @@ input[type=range]:focus-visible::-moz-range-thumb {
     z-index: 10;
 }
 
+.mini-legend {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    background: rgba(255,255,255,0.9);
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 4px 6px;
+    z-index: 10;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.68rem;
+    color: #343a40;
+    white-space: nowrap;
+}
+
+.legend-line {
+    width: 18px;
+    border-top: 2px solid;
+    transform: translateY(-1px);
+}
+
+.legend-line.current {
+    border-top-color: #495057;
+}
+
+.legend-line.base {
+    border-top-color: rgba(108,117,125,0.55);
+    border-top-style: dashed;
+}
+
 .stats-bar {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -401,6 +438,20 @@ input[type=range]:focus-visible::-moz-range-thumb {
         overflow-wrap: anywhere;
     }
 
+    .mini-legend {
+        right: 8px;
+        bottom: 8px;
+        gap: 6px;
+    }
+
+    .legend-item {
+        font-size: 0.64rem;
+    }
+
+    .legend-line { 
+        width: 14px;
+    }
+
     .stats-bar {
         grid-template-columns: 1fr;
         gap: 10px;
@@ -461,10 +512,18 @@ input[type=range]:focus-visible::-moz-range-thumb {
 <div class="chart-stack">
 <div class="chart-box">
 <div id="eqL" class="eq-overlay"></div>
+<div class="mini-legend">
+<span class="legend-item"><span class="legend-line current"></span>Current</span>
+<span class="legend-item"><span class="legend-line base"></span>Baseline</span>
+</div>
 <canvas id="chartL"></canvas>
 </div>
 <div class="chart-box">
 <div id="eqK" class="eq-overlay"></div>
+<div class="mini-legend">
+<span class="legend-item"><span class="legend-line current"></span>Current</span>
+<span class="legend-item"><span class="legend-line base"></span>Baseline</span>
+</div>
 <canvas id="chartK"></canvas>
 </div>
 </div>
@@ -520,7 +579,9 @@ function createChart(ctx,title,color){
         data:{datasets:[
             {data:[],borderColor:color,borderWidth:3,pointRadius:0},
             {data:[],borderColor:'#fab005',borderWidth:2,pointRadius:0},
-            {data:[],borderColor:'#000',borderDash:[6,4],borderWidth:2,pointRadius:0}
+            {data:[],borderColor:'#000',borderDash:[6,4],borderWidth:2,pointRadius:0},
+            {data:[],borderColor:'rgba(108,117,125,0.45)',borderDash:[6,6],borderWidth:2,pointRadius:0},
+            {data:[],borderColor:'rgba(73,80,87,0.45)',borderDash:[3,6],borderWidth:2,pointRadius:0}
         ]},
         options:{
             responsive:true,
@@ -549,6 +610,9 @@ function initCharts(){
 function refreshStepButtons(){
     step2Btn.classList.toggle("active", scenarioMode === "laborShock");
     step3Btn.classList.toggle("active", scenarioMode === "productivityShock");
+    document.querySelectorAll('.mini-legend').forEach(el => {
+        el.style.display = scenarioMode === "baseline" ? "none" : "flex";
+    });
 }
 
 function saveBaseline(){
@@ -650,12 +714,17 @@ function update(){
 
     // Equations
     eqL.innerHTML = `MPL = (1 - ${a.toFixed(2)}) × ${A} × (K/L)<sup>${a.toFixed(2)}</sup>`;
-    eqK.innerHTML = `MPK = ${a.toFixed(2)} × ${A} × (L/K)<sup>${(1-a).toFixed(2)}</sup>`;
+    eqK.innerHTML = `MPK = ${a.toFixed(2)} × ${A} × (L/K)<sup>(1-${a.toFixed(2)})</sup>`;
 
     let dL=[], dK=[];
+    let dLBase=[], dKBase=[];
+    const baseL = FIXED.baseL;
+    const baseA = FIXED.A;
     for(let i=1;i<=150;i++){
         dL.push({x:i,y:(1-a)*A*Math.pow(K,a)*Math.pow(i,-a)});
         dK.push({x:i,y:a*A*Math.pow(i,a-1)*Math.pow(L,1-a)});
+        dLBase.push({x:i,y:(1-a)*baseA*Math.pow(K,a)*Math.pow(i,-a)});
+        dKBase.push({x:i,y:a*baseA*Math.pow(i,a-1)*Math.pow(baseL,1-a)});
     }
 
     const fixedYMax = 170;
@@ -666,11 +735,17 @@ function update(){
     chartL.data.datasets[0].data=dL;
     chartL.data.datasets[1].data=[{x:0,y:w},{x:150,y:w}];
     chartL.data.datasets[2].data=[{x:L,y:0},{x:L,y:fixedYMax}];
+    chartL.data.datasets[3].data = scenarioMode === "productivityShock" ? dLBase : [];
+    chartL.data.datasets[4].data = scenarioMode === "laborShock"
+        ? [{x:FIXED.baseL,y:0},{x:FIXED.baseL,y:fixedYMax}]
+        : [];
     chartL.update();
 
     chartK.data.datasets[0].data=dK;
     chartK.data.datasets[1].data=[{x:0,y:r},{x:150,y:r}];
     chartK.data.datasets[2].data=[{x:K,y:0},{x:K,y:fixedYMax}];
+    chartK.data.datasets[3].data = scenarioMode !== "baseline" ? dKBase : [];
+    chartK.data.datasets[4].data = [];
     chartK.update();
 
     // ----- EQUILIBRIUM STATUS -----
