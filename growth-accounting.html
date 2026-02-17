@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Growth Accounting Explorer</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: #fdf2f8;
+    margin: 0;
+    padding: clamp(10px, 2vw, 20px);
+    display: flex;
+    justify-content: center;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 1100px;
+    background: white;
+    border-radius: 24px;
+    padding: clamp(14px, 2.6vw, 30px);
+    border: 4px solid #4b3621;
+    box-shadow: 12px 12px 0px #ffc9c9;
+}
+
+.header { text-align: center; margin-bottom: 20px; }
+.header h1 { margin: 0; color: #4b3621; }
+.header p {
+    margin: 8px 0 0;
+    color: #495057;
+    font-size: 0.95rem;
+}
+
+.equation {
+    margin-top: 10px;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 700;
+    color: #4b3621;
+    font-size: 0.95rem;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 330px 1fr;
+    gap: 22px;
+}
+
+.sidebar {
+    background: #fff9db;
+    border: 2px solid #4b3621;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.section {
+    background: #fff3bf;
+    border: 2px dashed #4b3621;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 14px;
+}
+
+.section h2 {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+    color: #4b3621;
+}
+
+.control-group { margin-bottom: 12px; }
+.control-group:last-child { margin-bottom: 0; }
+
+.control-group label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.84rem;
+    margin-bottom: 6px;
+    color: #4b3621;
+}
+
+select,
+input[type="file"],
+input[type="range"] {
+    width: 100%;
+}
+
+select,
+input[type="file"] {
+    border: 2px solid #4b3621;
+    border-radius: 8px;
+    background: white;
+    padding: 7px;
+    font-family: inherit;
+}
+
+input[type=range] {
+    cursor: pointer;
+    accent-color: #4b3621;
+    min-height: 34px;
+}
+
+.param-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.84rem;
+    margin-bottom: 6px;
+}
+.param-row:last-child { margin-bottom: 0; }
+
+.chart-box {
+    height: 520px;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    padding: 10px;
+    background: #fff;
+}
+
+.status-badge {
+    margin-top: 14px;
+    border-radius: 10px;
+    border: 2px solid #4b3621;
+    padding: 12px;
+    background: #fff9db;
+    color: #4b3621;
+    font-weight: 700;
+    text-align: center;
+}
+
+.fit-badge {
+    margin-top: 10px;
+    border-radius: 10px;
+    border: 2px solid #c92a2a;
+    padding: 12px;
+    background: #fff5f5;
+    color: #c92a2a;
+    font-weight: 800;
+    text-align: center;
+}
+
+.stats-panel {
+    margin-top: 10px;
+    border-radius: 10px;
+    border: 2px solid #4b3621;
+    padding: 12px;
+    background: #fff9db;
+    color: #4b3621;
+}
+
+.stats-panel h3 {
+    margin: 0 0 8px;
+    font-size: 0.88rem;
+}
+
+.stats-line {
+    margin: 6px 0;
+    font-size: 0.84rem;
+}
+
+.note {
+    margin-top: 8px;
+    color: #495057;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 980px) {
+    .layout { grid-template-columns: 1fr; }
+    .chart-box { height: 430px; }
+}
+
+@media (max-width: 640px) {
+    .app-container {
+        border-width: 3px;
+        border-radius: 16px;
+        box-shadow: 6px 6px 0px #ffc9c9;
+    }
+
+    .chart-box { height: 340px; }
+}
+</style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header">
+        <h1>🌍 Growth Accounting Explorer</h1>
+        <p>Compare output per person and capital per person relative to a benchmark country.</p>
+        <div class="equation">y = A × k<sup>(1-α)</sup>, where benchmark country is normalized to (1, 1)</div>
+    </div>
+
+    <div class="layout">
+        <div class="sidebar">
+            <div class="section">
+                <h2>Data</h2>
+                <div class="param-row"><span>Source</span><strong id="dataSource">—</strong></div>
+                <div class="param-row"><span>Year</span><strong id="dataYear">—</strong></div>
+                <div class="param-row"><span>Countries loaded</span><strong id="countryCount">0</strong></div>
+            </div>
+
+            <div class="section">
+                <h2>Country Selection</h2>
+                <div class="control-group">
+                    <label for="benchmarkSelect">Benchmark country</label>
+                    <select id="benchmarkSelect"></select>
+                </div>
+                <div class="control-group">
+                    <label for="otherSelect">Other country</label>
+                    <select id="otherSelect"></select>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Technology Parameters</h2>
+                <div class="param-row"><span>α (labor share)</span><strong>1/3</strong></div>
+                <div class="control-group">
+                    <label for="aSlider">A (other country curve): <span id="aVal">1.00</span></label>
+                    <input type="range" id="aSlider" min="0.30" max="2.00" step="0.001" value="1.00" />
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Relative Values</h2>
+                <div class="param-row"><span>Benchmark point</span><strong id="benchmarkPoint">(1.00, 1.00)</strong></div>
+                <div class="param-row"><span>Other point (k, y)</span><strong id="otherPoint">(—, —)</strong></div>
+                <div class="param-row"><span>Implied A for other point</span><strong id="impliedA">—</strong></div>
+            </div>
+
+        </div>
+
+        <div>
+            <div class="chart-box">
+                <canvas id="gaChart"></canvas>
+            </div>
+            <div id="fitStatus" class="fit-badge">Model does not match the data</div>
+            <div class="stats-panel">
+                <h3>Interpretation</h3>
+                <div id="statIncomeGap" class="stats-line">—</div>
+                <div id="statCapitalCf" class="stats-line">Adjust A until the model matches the data to see this counterfactual.</div>
+                <div id="statProductivityCf" class="stats-line">Adjust A until the model matches the data to see this counterfactual.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const DATA_FILE = 'growth-accounting-2023-template.csv';
+const DATA_SOURCE = 'Penn World Table 2023';
+const DATA_YEAR = '2023';
+const ALPHA = 1 / 3;
+
+let countryData = [];
+let chart;
+
+const pointLabelPlugin = {
+    id: 'pointLabelPlugin',
+    afterDatasetsDraw(chartInstance) {
+        const { ctx } = chartInstance;
+        ctx.save();
+        ctx.font = '12px Space Grotesk';
+        ctx.fillStyle = '#343a40';
+        ctx.textBaseline = 'bottom';
+
+        chartInstance.data.datasets.forEach((dataset, datasetIndex) => {
+            if (!dataset.pointNames) return;
+            const meta = chartInstance.getDatasetMeta(datasetIndex);
+            meta.data.forEach((element, index) => {
+                const label = dataset.pointNames[index];
+                if (!label) return;
+                const pos = element.getProps(['x', 'y'], true);
+                if (label === 'Model') {
+                    const width = ctx.measureText(label).width;
+                    ctx.fillText(label, pos.x - width - 7, pos.y - 6);
+                } else {
+                    ctx.fillText(label, pos.x + 7, pos.y - 6);
+                }
+            });
+        });
+
+        ctx.restore();
+    }
+};
+
+const equationInChartPlugin = {
+    id: 'equationInChartPlugin',
+    afterDraw(chartInstance) {
+        const xScale = chartInstance.scales.x;
+        const yScale = chartInstance.scales.y;
+        if (!xScale || !yScale) return;
+
+        const slider = document.getElementById('aSlider');
+        const Aother = slider ? Number(slider.value) : 1;
+        const text = `y = ${Aother.toFixed(2)} × k^(1-1/3)`;
+
+        const xPixel = xScale.getPixelForValue(1.5);
+        const yPixel = yScale.getPixelForValue(1.0);
+
+        const { ctx } = chartInstance;
+        ctx.save();
+        ctx.font = '12px Courier New';
+        ctx.textBaseline = 'middle';
+
+        const textWidth = ctx.measureText(text).width;
+        const paddingX = 6;
+        const boxX = xPixel - paddingX;
+        const boxY = yPixel - 10;
+        const boxW = textWidth + paddingX * 2;
+        const boxH = 20;
+
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+        ctx.strokeStyle = '#ced4da';
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+        ctx.fillStyle = '#343a40';
+        ctx.fillText(text, xPixel, yPixel);
+        ctx.restore();
+    }
+};
+
+function cleanAndValidateRows(rows) {
+    const validRows = rows
+        .map(r => ({
+            country: String(r.country || '').trim(),
+            output_per_person: Number(r.output_per_person),
+            capital_per_person: Number(r.capital_per_person)
+        }))
+        .filter(r => r.country && r.output_per_person > 0 && r.capital_per_person > 0);
+
+    const byCountry = new Map();
+    validRows.forEach(r => byCountry.set(r.country, r));
+    return Array.from(byCountry.values()).sort((a, b) => a.country.localeCompare(b.country));
+}
+
+function parseCsv(text) {
+    const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+    if (lines.length < 2) return [];
+
+    const headers = splitCsvLine(lines[0]).map(h => h.trim().toLowerCase());
+    const idxCountry = headers.indexOf('country');
+    const idxY = headers.indexOf('output_per_person');
+    const idxK = headers.indexOf('capital_per_person');
+
+    if ([idxCountry, idxY, idxK].some(i => i < 0)) {
+        return null;
+    }
+
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+        const cols = splitCsvLine(lines[i]).map(c => c.trim());
+        rows.push({
+            country: stripCsvQuotes(cols[idxCountry] || ''),
+            output_per_person: cols[idxY],
+            capital_per_person: cols[idxK]
+        });
+    }
+    return rows;
+}
+
+function splitCsvLine(line) {
+    const cols = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+                current += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+            continue;
+        }
+
+        if (ch === ',' && !inQuotes) {
+            cols.push(current);
+            current = '';
+            continue;
+        }
+
+        current += ch;
+    }
+
+    cols.push(current);
+    return cols;
+}
+
+function stripCsvQuotes(value) {
+    const trimmed = String(value).trim();
+    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+        return trimmed.slice(1, -1).replace(/""/g, '"');
+    }
+    return trimmed;
+}
+
+function setMessage(text, tone = 'neutral') {
+    const el = document.getElementById('message');
+    if (!el) return;
+    el.innerText = text;
+
+    if (tone === 'ok') {
+        el.style.background = '#d3f9d8';
+        el.style.color = '#2b8a3e';
+        el.style.borderColor = '#2b8a3e';
+        return;
+    }
+
+    if (tone === 'warn') {
+        el.style.background = '#fff5f5';
+        el.style.color = '#c92a2a';
+        el.style.borderColor = '#c92a2a';
+        return;
+    }
+
+    el.style.background = '#fff9db';
+    el.style.color = '#4b3621';
+    el.style.borderColor = '#4b3621';
+}
+
+function setDataMeta(count) {
+    document.getElementById('dataSource').innerText = DATA_SOURCE;
+    document.getElementById('dataYear').innerText = DATA_YEAR;
+    document.getElementById('countryCount').innerText = String(count);
+}
+
+function getDefaultBenchmark(countries) {
+    const us = countries.find(c => {
+        const name = c.country.toLowerCase();
+        return name === 'united states' || name === 'united states of america' || name === 'usa' || name === 'us';
+    });
+    return us ? us.country : (countries[0]?.country || '');
+}
+
+function populateSelects() {
+    const benchmarkSelect = document.getElementById('benchmarkSelect');
+    const otherSelect = document.getElementById('otherSelect');
+
+    benchmarkSelect.innerHTML = '';
+    otherSelect.innerHTML = '';
+
+    countryData.forEach(row => {
+        const o1 = document.createElement('option');
+        o1.value = row.country;
+        o1.textContent = row.country;
+        benchmarkSelect.appendChild(o1);
+
+        const o2 = document.createElement('option');
+        o2.value = row.country;
+        o2.textContent = row.country;
+        otherSelect.appendChild(o2);
+    });
+
+    const benchmarkDefault = getDefaultBenchmark(countryData);
+    benchmarkSelect.value = benchmarkDefault;
+
+    const otherDefault = countryData.find(r => r.country !== benchmarkDefault)?.country || benchmarkDefault;
+    otherSelect.value = otherDefault;
+}
+
+function getRow(country) {
+    return countryData.find(r => r.country === country);
+}
+
+function buildCurveData(alpha, Acurve, kMax) {
+    const points = [];
+    const upper = Math.max(1.05, kMax);
+    for (let k = 0.01; k <= upper; k += 0.01) {
+        points.push({ x: k, y: Acurve * Math.pow(k, 1 - alpha) });
+    }
+    return points;
+}
+
+function updateChart() {
+    const benchmarkName = document.getElementById('benchmarkSelect').value;
+    const otherName = document.getElementById('otherSelect').value;
+    const alpha = ALPHA;
+    const Aother = Number(document.getElementById('aSlider').value);
+    document.getElementById('aVal').innerText = Aother.toFixed(2);
+
+    const benchmark = getRow(benchmarkName);
+    const other = getRow(otherName);
+
+    if (!benchmark || !other) {
+        setMessage('Please select valid countries.', 'warn');
+        return;
+    }
+
+    const kRelOther = other.capital_per_person / benchmark.capital_per_person;
+    const yRelOther = other.output_per_person / benchmark.output_per_person;
+    const yModelAtOtherK = Aother * Math.pow(kRelOther, 1 - alpha);
+    const impliedA = yRelOther / Math.pow(kRelOther, 1 - alpha);
+    const aRelativeGap = Math.abs(Aother - impliedA) / Math.max(impliedA, 1e-9);
+    const modelMatched = aRelativeGap <= 0.01;
+
+    document.getElementById('benchmarkPoint').innerText = '(1.00, 1.00)';
+    document.getElementById('otherPoint').innerText = `(${kRelOther.toFixed(2)}, ${yRelOther.toFixed(2)})`;
+    document.getElementById('impliedA').innerText = impliedA.toFixed(2);
+
+    const maxKSelected = Math.max(1, kRelOther);
+    const maxX = Math.max(1.05, maxKSelected * 1.08);
+
+    const baselineCurve = buildCurveData(alpha, 1, maxX);
+    const otherCurve = buildCurveData(alpha, Aother, maxX);
+
+    chart.data.datasets = [
+        {
+            type: 'line',
+            label: 'A = 1 benchmark curve',
+            data: baselineCurve,
+            borderColor: '#228be6',
+            borderWidth: 3,
+            pointRadius: 0
+        },
+        {
+            type: 'line',
+            label: `A = ${Aother.toFixed(2)} other-country curve`,
+            data: otherCurve,
+            borderColor: '#e8590c',
+            borderWidth: 2,
+            borderDash: [6, 4],
+            pointRadius: 0
+        },
+        {
+            type: 'scatter',
+            label: 'Benchmark and other country',
+            data: [
+                { x: 1, y: 1 },
+                { x: kRelOther, y: yRelOther }
+            ],
+            pointRadius: 6,
+            pointBackgroundColor: ['#2b8a3e', '#c92a2a'],
+            pointBorderColor: ['#2b8a3e', '#c92a2a'],
+            pointNames: [benchmarkName, otherName]
+        },
+        {
+            type: 'scatter',
+            label: 'Model point',
+            data: [
+                { x: kRelOther, y: yModelAtOtherK }
+            ],
+            pointRadius: 6,
+            pointBackgroundColor: ['#6741d9'],
+            pointBorderColor: ['#6741d9'],
+            pointStyle: 'rectRot',
+            pointNames: ['Model']
+        }
+    ];
+
+    const maxY = Math.max(1.2, yRelOther * 1.15, Aother * Math.pow(maxX, 1 - alpha) * 1.05);
+    chart.options.scales.x.max = maxX;
+    chart.options.scales.y.max = maxY;
+
+    chart.update();
+
+    const fitStatus = document.getElementById('fitStatus');
+    if (modelMatched) {
+        fitStatus.innerText = 'The model matched the data';
+        fitStatus.style.background = '#d3f9d8';
+        fitStatus.style.color = '#2b8a3e';
+        fitStatus.style.borderColor = '#2b8a3e';
+    } else {
+        fitStatus.innerText = 'The model does not match the data';
+        fitStatus.style.background = '#fff5f5';
+        fitStatus.style.color = '#c92a2a';
+        fitStatus.style.borderColor = '#c92a2a';
+    }
+
+    const statIncomeGap = document.getElementById('statIncomeGap');
+    const statCapitalCf = document.getElementById('statCapitalCf');
+    const statProductivityCf = document.getElementById('statProductivityCf');
+
+    if (yRelOther < 1) {
+        statIncomeGap.innerText = `${otherName} is ${(1 / yRelOther).toFixed(2)} times poorer than ${benchmarkName}.`;
+    } else {
+        statIncomeGap.innerText = `${otherName} is ${yRelOther.toFixed(2)} times richer than ${benchmarkName}.`;
+    }
+
+    if (modelMatched) {
+        const yIfUSCapital = Aother * Math.pow(1, 1 - alpha);
+        const capitalFactor = yIfUSCapital / yRelOther;
+        if (capitalFactor >= 1) {
+            statCapitalCf.innerText = `If ${otherName} had the capital of ${benchmarkName}, it would be ${capitalFactor.toFixed(2)} times richer.`;
+        } else {
+            statCapitalCf.innerText = `If ${otherName} had the capital of ${benchmarkName}, it would be ${(1 / capitalFactor).toFixed(2)} times poorer.`;
+        }
+
+        const yIfUSProductivity = Math.pow(kRelOther, 1 - alpha);
+        const productivityFactor = yIfUSProductivity / yRelOther;
+        if (productivityFactor >= 1) {
+            statProductivityCf.innerText = `If ${otherName} had the productivity of ${benchmarkName} but the same capital, it would be ${productivityFactor.toFixed(2)} times richer.`;
+        } else {
+            statProductivityCf.innerText = `If ${otherName} had the productivity of ${benchmarkName} but the same capital, it would be ${(1 / productivityFactor).toFixed(2)} times poorer.`;
+        }
+    } else {
+        statCapitalCf.innerText = 'Adjust A until the model matches the data to see this counterfactual.';
+        statProductivityCf.innerText = 'Adjust A until the model matches the data to see this counterfactual.';
+    }
+
+}
+
+function initChart() {
+    const ctx = document.getElementById('gaChart');
+    chart = new Chart(ctx, {
+        type: 'scatter',
+        data: { datasets: [] },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            plugins: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: 'Output per Person vs Capital per Person (Relative to Benchmark)'
+                }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    min: 0,
+                    max: 1.2,
+                    title: { display: true, text: 'k (capital per person, relative to benchmark)' }
+                },
+                y: {
+                    min: 0,
+                    max: 1.2,
+                    title: { display: true, text: 'y (output per person, relative to benchmark)' }
+                }
+            }
+        },
+        plugins: [pointLabelPlugin, equationInChartPlugin]
+    });
+}
+
+function bindEvents() {
+    document.getElementById('benchmarkSelect').addEventListener('change', () => {
+        const benchmarkName = document.getElementById('benchmarkSelect').value;
+        const otherSelect = document.getElementById('otherSelect');
+        if (otherSelect.value === benchmarkName) {
+            const alternative = countryData.find(r => r.country !== benchmarkName)?.country || benchmarkName;
+            otherSelect.value = alternative;
+        }
+        updateChart();
+    });
+
+    document.getElementById('otherSelect').addEventListener('change', () => {
+        const benchmarkName = document.getElementById('benchmarkSelect').value;
+        const otherSelect = document.getElementById('otherSelect');
+        if (otherSelect.value === benchmarkName) {
+            setMessage('Benchmark and other country are the same. Choose a different comparison country.', 'warn');
+        }
+        updateChart();
+    });
+
+    document.getElementById('aSlider').addEventListener('input', updateChart);
+}
+
+async function loadDataFromFile() {
+    try {
+        const response = await fetch(DATA_FILE, { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error(`Could not load ${DATA_FILE}`);
+        }
+
+        const text = await response.text();
+        const parsed = parseCsv(text);
+
+        if (parsed === null) {
+            throw new Error('CSV columns must include: country, output_per_person, capital_per_person');
+        }
+
+        const cleaned = cleanAndValidateRows(parsed);
+        if (cleaned.length < 2) {
+            throw new Error('Need at least two valid countries in the CSV file.');
+        }
+
+        countryData = cleaned;
+        setDataMeta(cleaned.length);
+        setMessage(`Loaded ${cleaned.length} countries from ${DATA_FILE}.`, 'ok');
+        return true;
+    } catch (error) {
+        setDataMeta(0);
+        setMessage(`Data load error: ${error.message}`, 'warn');
+        return false;
+    }
+}
+
+async function init() {
+    initChart();
+    const loaded = await loadDataFromFile();
+    if (!loaded) {
+        return;
+    }
+
+    populateSelects();
+    bindEvents();
+    updateChart();
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
