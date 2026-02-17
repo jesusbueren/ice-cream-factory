@@ -32,6 +32,14 @@ body {
 .header { text-align: center; margin-bottom: 25px; }
 .header h1 { margin: 0; font-weight: 800; color: #4b3621; }
 
+.title-equation {
+    margin-top: 8px;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #4b3621;
+}
+
 .main-layout {
     display: grid;
     grid-template-columns: 320px 1fr;
@@ -256,19 +264,6 @@ input[type=range]:focus-visible::-moz-range-thumb {
     background: #fff;
 }
 
-.eq-overlay {
-    position: absolute;
-    top: 38px;
-    right: 10px;
-    font-family: 'Courier New', Courier, monospace;
-    font-weight: 700;
-    font-size: 0.85rem;
-    background: rgba(255,255,255,0.8);
-    padding: 4px 6px;
-    border-radius: 6px;
-    border: 1px solid #4b3621;
-    z-index: 10;
-}
 
 .mini-legend {
     position: absolute;
@@ -432,12 +427,6 @@ input[type=range]:focus-visible::-moz-range-thumb {
         padding: 8px;
     }
 
-    .eq-overlay {
-        font-size: 0.72rem;
-        max-width: calc(100% - 16px);
-        overflow-wrap: anywhere;
-    }
-
     .mini-legend {
         right: 8px;
         bottom: 8px;
@@ -473,6 +462,7 @@ input[type=range]:focus-visible::-moz-range-thumb {
 
 <div class="header">
 <h1>🍦 Scoop-Master Simulator</h1>
+<div class="title-equation">Y = A × (zK)<sup>(1-α)</sup> × L<sup>α</sup></div>
 </div>
 
 <div class="main-layout">
@@ -482,8 +472,9 @@ input[type=range]:focus-visible::-moz-range-thumb {
 <h2>Fixed Production Parameters</h2>
 <div class="param-row"><span>Machines (<span class="overbar">K</span>)</span><strong id="valK">60</strong></div>
 <div class="param-row"><span>Scoopers (<span class="overbar">L</span>)</span><strong id="valL">80</strong></div>
-<div class="param-row"><span>Capital Share (α)</span><strong id="valAlpha">0.30</strong></div>
-<div class="param-row"><span>Productivity (A)</span><strong id="valA">100</strong></div>
+<div class="param-row"><span>Labor Share (α)</span><strong id="valAlpha">0.30</strong></div>
+<div class="param-row"><span>Scale Productivity (A)</span><strong id="valA">100</strong></div>
+<div class="param-row"><span>AI Capital Multiplier (z)</span><strong id="valZ">1.00</strong></div>
 </div>
 
 <div class="step-panel">
@@ -491,7 +482,7 @@ input[type=range]:focus-visible::-moz-range-thumb {
 <div class="step-buttons">
 <button id="saveBaselineBtn" type="button">Step 1: Save baseline equilibrium</button>
 <button id="step2Btn" type="button">Step 2: Apply labor shock (L̄ -50%)</button>
-<button id="step3Btn" type="button">Step 3: Apply productivity shock (A +50%)</button>
+<button id="step3Btn" type="button">Step 3: Apply AI capital shock (z +50%)</button>
 <button id="resetScenarioBtn" type="button">Reset to baseline scenario</button>
 </div>
 <p id="scenarioNote" class="scenario-note">Start in Step 1 and save your baseline after finding market-clearing w and r.</p>
@@ -504,14 +495,13 @@ input[type=range]:focus-visible::-moz-range-thumb {
 </div>
 <div class="control-group">
 <label style="color:#087f5b">Rent (r) <span id="valR">20</span></label>
-<input type="range" id="Rent" min="5" max="100" value="20">
+<input type="range" id="Rent" min="5" max="180" value="20">
 </div>
 </div>
 </div>
 
 <div class="chart-stack">
 <div class="chart-box">
-<div id="eqL" class="eq-overlay"></div>
 <div class="mini-legend">
 <span class="legend-item"><span class="legend-line current"></span>Current</span>
 <span class="legend-item"><span class="legend-line base"></span>Baseline</span>
@@ -519,7 +509,6 @@ input[type=range]:focus-visible::-moz-range-thumb {
 <canvas id="chartL"></canvas>
 </div>
 <div class="chart-box">
-<div id="eqK" class="eq-overlay"></div>
 <div class="mini-legend">
 <span class="legend-item"><span class="legend-line current"></span>Current</span>
 <span class="legend-item"><span class="legend-line base"></span>Baseline</span>
@@ -561,7 +550,7 @@ input[type=range]:focus-visible::-moz-range-thumb {
 
 <script>
 let chartL, chartK;
-const FIXED = { K: 60, baseL: 80, alpha: 0.3, A: 100 };
+const FIXED = { K: 60, baseL: 80, alpha: 0.3, A: 100, z: 1 };
 let scenarioMode = "baseline";
 let baselineSnapshot = null;
 
@@ -569,8 +558,8 @@ function getLaborSupply(){
     return scenarioMode === "laborShock" ? FIXED.baseL * 0.5 : FIXED.baseL;
 }
 
-function getProductivity(){
-    return scenarioMode === "productivityShock" ? FIXED.A * 1.5 : FIXED.A;
+function getAiMultiplier(){
+    return scenarioMode === "aiShock" ? FIXED.z * 1.5 : FIXED.z;
 }
 
 function createChart(ctx,title,color){
@@ -609,7 +598,7 @@ function initCharts(){
 
 function refreshStepButtons(){
     step2Btn.classList.toggle("active", scenarioMode === "laborShock");
-    step3Btn.classList.toggle("active", scenarioMode === "productivityShock");
+    step3Btn.classList.toggle("active", scenarioMode === "aiShock");
     document.querySelectorAll('.mini-legend').forEach(el => {
         el.style.display = scenarioMode === "baseline" ? "none" : "flex";
     });
@@ -640,8 +629,8 @@ function activateStep2(){
 }
 
 function activateStep3(){
-    scenarioMode = "productivityShock";
-    scenarioNote.innerText = "Step 3 active: productivity rises by 50% (A: 100 → 150). Adjust w and r to find the new equilibrium.";
+    scenarioMode = "aiShock";
+    scenarioNote.innerText = "Step 3 active: AI raises effective capital by 50% (z: 1.00 → 1.50). Adjust w and r to find the new equilibrium.";
     refreshStepButtons();
     update();
 }
@@ -657,16 +646,18 @@ function getState(){
     const K=FIXED.K;
     const L=getLaborSupply();
     const a=FIXED.alpha;
-    const A=getProductivity();
+    const A=FIXED.A;
+    const z=getAiMultiplier();
+    const zTerm = Math.pow(z, 1-a);
     const w=+Wage.value;
     const r=+Rent.value;
 
-    const Y=A*Math.pow(K,a)*Math.pow(L,1-a);
-    const MPL=(1-a)*A*Math.pow(K,a)*Math.pow(L,-a);
-    const MPK=a*A*Math.pow(K,a-1)*Math.pow(L,1-a);
+    const Y=A*zTerm*Math.pow(K,1-a)*Math.pow(L,a);
+    const MPL=a*A*zTerm*Math.pow(K,1-a)*Math.pow(L,a-1);
+    const MPK=(1-a)*A*zTerm*Math.pow(K,-a)*Math.pow(L,a);
     const equilibrium = Math.abs(w-MPL)<2 && Math.abs(r-MPK)<2;
 
-    return { K, L, a, A, w, r, Y, MPL, MPK, equilibrium };
+    return { K, L, a, A, z, zTerm, w, r, Y, MPL, MPK, equilibrium };
 }
 
 function updateComparison(state){
@@ -697,12 +688,13 @@ function updateComparison(state){
 }
 
 function update(){
-    const { K, L, a, A, w, r, Y, MPL, MPK, equilibrium } = getState();
+    const { K, L, a, A, z, zTerm, w, r, Y, MPL, MPK, equilibrium } = getState();
 
     valK.innerText=K;
     valL.innerText=L;
     valAlpha.innerText=a.toFixed(2);
     valA.innerText=A;
+    valZ.innerText=z.toFixed(2);
     valW.innerText=w;
     valR.innerText=r;
 
@@ -710,21 +702,18 @@ function update(){
     statYperL.innerText=(Y/L).toFixed(2);
     statLS.innerText=((w*L/Y)*100).toFixed(1)+"%";
     statKS.innerText=((r*K/Y)*100).toFixed(1)+"%";
-    updateComparison({ K, L, a, A, w, r, Y });
-
-    // Equations
-    eqL.innerHTML = `MPL = (1 - ${a.toFixed(2)}) × ${A} × (K/L)<sup>${a.toFixed(2)}</sup>`;
-    eqK.innerHTML = `MPK = ${a.toFixed(2)} × ${A} × (L/K)<sup>(1-${a.toFixed(2)})</sup>`;
+    updateComparison({ K, L, a, z, w, r, Y });
 
     let dL=[], dK=[];
     let dLBase=[], dKBase=[];
     const baseL = FIXED.baseL;
     const baseA = FIXED.A;
+    const baseZTerm = Math.pow(FIXED.z, 1-a);
     for(let i=1;i<=150;i++){
-        dL.push({x:i,y:(1-a)*A*Math.pow(K,a)*Math.pow(i,-a)});
-        dK.push({x:i,y:a*A*Math.pow(i,a-1)*Math.pow(L,1-a)});
-        dLBase.push({x:i,y:(1-a)*baseA*Math.pow(K,a)*Math.pow(i,-a)});
-        dKBase.push({x:i,y:a*baseA*Math.pow(i,a-1)*Math.pow(baseL,1-a)});
+        dL.push({x:i,y:a*A*zTerm*Math.pow(K,1-a)*Math.pow(i,a-1)});
+        dK.push({x:i,y:(1-a)*A*zTerm*Math.pow(i,-a)*Math.pow(L,a)});
+        dLBase.push({x:i,y:a*baseA*baseZTerm*Math.pow(K,1-a)*Math.pow(i,a-1)});
+        dKBase.push({x:i,y:(1-a)*baseA*baseZTerm*Math.pow(i,-a)*Math.pow(baseL,a)});
     }
 
     const fixedYMax = 170;
@@ -735,7 +724,7 @@ function update(){
     chartL.data.datasets[0].data=dL;
     chartL.data.datasets[1].data=[{x:0,y:w},{x:150,y:w}];
     chartL.data.datasets[2].data=[{x:L,y:0},{x:L,y:fixedYMax}];
-    chartL.data.datasets[3].data = scenarioMode === "productivityShock" ? dLBase : [];
+    chartL.data.datasets[3].data = scenarioMode === "aiShock" ? dLBase : [];
     chartL.data.datasets[4].data = scenarioMode === "laborShock"
         ? [{x:FIXED.baseL,y:0},{x:FIXED.baseL,y:fixedYMax}]
         : [];
@@ -751,7 +740,7 @@ function update(){
     // ----- EQUILIBRIUM STATUS -----
     const scenarioPrefix = scenarioMode === "laborShock"
         ? "Step 2 (L̄ -50%): "
-        : (scenarioMode === "productivityShock" ? "Step 3 (A +50%): " : "Step 1: ");
+        : (scenarioMode === "aiShock" ? "Step 3 (z +50% AI): " : "Step 1: ");
     statusMsg.innerText = scenarioPrefix + (equilibrium ? "General Equilibrium Achieved" : "Factor Markets Not Clearing");
     statusMsg.style.background = equilibrium ? "#d3f9d8" : "#fff5f5";
     statusMsg.style.color = equilibrium ? "#2b8a3e" : "#c92a2a";
