@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Firm Labor Choice Lab</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: #fdf2f8;
+    margin: 0;
+    padding: clamp(10px, 2vw, 20px);
+    display: flex;
+    justify-content: center;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 1100px;
+    background: white;
+    border-radius: 24px;
+    padding: clamp(14px, 2.6vw, 30px);
+    border: 4px solid #4b3621;
+    box-shadow: 12px 12px 0px #ffc9c9;
+}
+
+.header { text-align: center; margin-bottom: 20px; }
+.header h1 { margin: 0; color: #4b3621; }
+.header p {
+    margin: 8px 0 0;
+    color: #495057;
+    font-size: 0.95rem;
+}
+
+.equation {
+    margin-top: 10px;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 700;
+    color: #4b3621;
+    font-size: 0.95rem;
+}
+
+.overbar {
+    text-decoration: overline;
+    text-decoration-thickness: 2px;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 22px;
+}
+
+.sidebar {
+    background: #fff9db;
+    border: 2px solid #4b3621;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.section {
+    background: #fff3bf;
+    border: 2px dashed #4b3621;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 14px;
+}
+
+.section h2 {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+    color: #4b3621;
+}
+
+.param-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.84rem;
+    margin-bottom: 6px;
+}
+.param-row:last-child { margin-bottom: 0; }
+
+.control-group { margin-bottom: 14px; }
+.control-group:last-child { margin-bottom: 0; }
+.control-group label {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+input[type=range] {
+    width: 100%;
+    cursor: pointer;
+    accent-color: #4b3621;
+    min-height: 36px;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 999px;
+    background: #ffe8cc;
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #4b3621;
+    border: 2px solid #fff;
+    margin-top: -7px;
+    box-shadow: 0 0 0 2px #4b3621;
+}
+
+.chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.chart-box {
+    height: 360px;
+    min-height: 280px;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    padding: 10px;
+    background: #fff;
+}
+
+.stats {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.stat-card {
+    background: #4b3621;
+    color: white;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+}
+.stat-card small {
+    display: block;
+    font-size: 0.7rem;
+    opacity: 0.85;
+    text-transform: uppercase;
+}
+.stat-card span {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.status-badge {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 800;
+    border: 2px solid #4b3621;
+}
+
+.note {
+    margin-top: 12px;
+    font-size: 0.82rem;
+    color: #4b3621;
+}
+
+@media (max-width: 980px) {
+    .layout { grid-template-columns: 1fr; }
+    .chart-grid { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+    .app-container {
+        border-width: 3px;
+        border-radius: 16px;
+        box-shadow: 6px 6px 0px #ffc9c9;
+    }
+    .chart-box { height: 290px; }
+    .stats { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header">
+        <h1>🍦 Ice Cream Hiring Decision</h1>
+        <p>You are the owner of an ice cream factory. You own the machines and want to know how many scoopers to hire.</p>
+        <div class="equation">Y = A × <span class="overbar">K</span><sup>(1-α)</sup> × L<sup>α</sup>, &nbsp; π(L) = Y - wL - r<span class="overbar">K</span></div>
+    </div>
+
+    <div class="layout">
+        <div class="sidebar">
+            <div class="section">
+                <h2>Fixed Parameters</h2>
+                <div class="param-row"><span>Scale Productivity (A)</span><strong id="valA">100</strong></div>
+                <div class="param-row"><span>Fixed Capital (<span class="overbar">K</span>)</span><strong id="valK">60</strong></div>
+                <div class="param-row"><span>Labor Share (α)</span><strong id="valAlpha">0.30</strong></div>
+                <div class="param-row"><span>Wage (w)</span><strong id="valW">55</strong></div>
+                <div class="param-row"><span>Capital Price (r)</span><strong id="valR">0</strong></div>
+            </div>
+
+            <div class="section">
+                <h2>Student Controls</h2>
+                <div class="control-group">
+                    <label for="Labor">Labor (L) <span id="showL">40</span></label>
+                    <input type="range" id="Labor" min="0" max="50" value="40" />
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Optimality Condition</h2>
+                <div class="param-row"><span>FOC</span><strong>MPL = w</strong></div>
+                <div class="param-row"><span>Current MPL(L)</span><strong id="showVMPL">0.0</strong></div>
+                <div class="param-row"><span>Gap: MPL - w</span><strong id="showGap">0.0</strong></div>
+            </div>
+
+            <div class="note">Left: total profits as a function of labor, with a dot at current L. Right: MPL curve and the wage line, with a dot at the current L.</div>
+        </div>
+
+        <div>
+            <div class="chart-grid">
+                <div class="chart-box"><canvas id="profitChart"></canvas></div>
+                <div class="chart-box"><canvas id="mplChart"></canvas></div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card"><small>Current L</small><span id="statL">0.0</span></div>
+                <div class="stat-card"><small>Y(L)</small><span id="statY">0</span></div>
+                <div class="stat-card"><small>π(L)</small><span id="statPi">0</span></div>
+                <div class="stat-card"><small>MPL(L)</small><span id="statMPL">0.00</span></div>
+            </div>
+            <div id="actionMsg" class="status-badge">Move L to compare MPL and w</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const FIXED = {
+    A: 100,
+    K: 60,
+    alpha: 0.3,
+    w: 55,
+    r: 0,
+    lMin: 0,
+    lMax: 50
+};
+
+let profitChart;
+let mplChart;
+
+function yOfL(L) {
+    const a = FIXED.alpha;
+    if (L <= 0) {
+        return 0;
+    }
+    return FIXED.A * Math.pow(FIXED.K, 1 - a) * Math.pow(L, a);
+}
+
+function mplOfL(L) {
+    const a = FIXED.alpha;
+    if (L <= 0) {
+        return Infinity;
+    }
+    return a * FIXED.A * Math.pow(FIXED.K, 1 - a) * Math.pow(L, a - 1);
+}
+
+function profitOfL(L) {
+    return yOfL(L) - FIXED.w * L - FIXED.r * FIXED.K;
+}
+
+function createChart(ctx, title, yLabel, xLabel) {
+    return new Chart(ctx, {
+        type: 'line',
+        data: { datasets: [] },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            plugins: {
+                legend: { display: true, labels: { boxWidth: 18 } },
+                title: { display: true, text: title }
+            },
+            scales: {
+                x: { type: 'linear', min: FIXED.lMin, max: FIXED.lMax, title: { display: true, text: xLabel } },
+                y: { title: { display: true, text: yLabel } }
+            }
+        }
+    });
+}
+
+function setupCharts() {
+    profitChart = createChart(document.getElementById('profitChart'), 'Total Profits as a Function of Labor', 'Profit π(L)', 'Labor (L)');
+    mplChart = createChart(document.getElementById('mplChart'), 'Marginal Product of Labor and Wage', 'Value', 'Labor (L)');
+}
+
+function update() {
+    const L = +document.getElementById('Labor').value;
+
+    const profitSeries = [];
+    const mplSeries = [];
+    const wageSeries = [];
+
+    for (let labor = FIXED.lMin; labor <= FIXED.lMax; labor += 1) {
+        profitSeries.push({ x: labor, y: profitOfL(labor) });
+        const mplAtLabor = mplOfL(labor);
+        mplSeries.push({ x: labor, y: Number.isFinite(mplAtLabor) ? mplAtLabor : null });
+        wageSeries.push({ x: labor, y: FIXED.w });
+    }
+
+    const yCurrent = yOfL(L);
+    const piCurrent = profitOfL(L);
+    const mplCurrent = mplOfL(L);
+    const vmplCurrent = mplCurrent;
+    const gap = vmplCurrent - FIXED.w;
+    const pointProfit = [{ x: L, y: piCurrent }];
+    const pointMpl = [{ x: L, y: Number.isFinite(vmplCurrent) ? vmplCurrent : null }];
+
+    profitChart.data.datasets = [
+        { label: 'π(L)', data: profitSeries, borderColor: '#ff6b6b', borderWidth: 3, pointRadius: 0 },
+        { label: 'Current point', data: pointProfit, borderColor: '#4b3621', backgroundColor: '#4b3621', pointRadius: 5, pointHoverRadius: 5, showLine: false }
+    ];
+
+    mplChart.data.datasets = [
+        { label: 'MPL(L)', data: mplSeries, borderColor: '#20c997', borderWidth: 3, pointRadius: 0 },
+        { label: 'Wage w', data: wageSeries, borderColor: '#d9480f', borderWidth: 2, pointRadius: 0 },
+        { label: 'Current point', data: pointMpl, borderColor: '#4b3621', backgroundColor: '#4b3621', pointRadius: 5, pointHoverRadius: 5, showLine: false }
+    ];
+
+    mplChart.options.scales.y.max = Math.max(80, FIXED.w * 1.7);
+    mplChart.options.scales.y.min = 0;
+    profitChart.options.scales.y.suggestedMin = Math.min(...profitSeries.map(d => d.y)) * 1.05;
+    profitChart.options.scales.y.suggestedMax = Math.max(...profitSeries.map(d => d.y)) * 1.05;
+
+    profitChart.update();
+    mplChart.update();
+
+    document.getElementById('showL').innerText = L;
+
+    document.getElementById('valA').innerText = FIXED.A;
+    document.getElementById('valK').innerText = FIXED.K;
+    document.getElementById('valAlpha').innerText = FIXED.alpha.toFixed(2);
+    document.getElementById('valW').innerText = FIXED.w;
+    document.getElementById('valR').innerText = FIXED.r;
+
+    document.getElementById('showVMPL').innerText = Number.isFinite(vmplCurrent) ? vmplCurrent.toFixed(1) : '∞';
+    document.getElementById('showGap').innerText = Number.isFinite(gap) ? gap.toFixed(1) : '∞';
+
+    document.getElementById('statL').innerText = L.toFixed(1);
+    document.getElementById('statY').innerText = Math.round(yCurrent).toLocaleString();
+    document.getElementById('statPi').innerText = Math.round(piCurrent).toLocaleString();
+    document.getElementById('statMPL').innerText = Number.isFinite(mplCurrent) ? mplCurrent.toFixed(2) : '∞';
+
+    const actionMsg = document.getElementById('actionMsg');
+    if (Math.abs(gap) <= 1) {
+        actionMsg.innerText = 'Maximum profits';
+        actionMsg.style.background = '#d3f9d8';
+        actionMsg.style.color = '#2b8a3e';
+        actionMsg.style.borderColor = '#2b8a3e';
+    } else if (gap > 1) {
+        actionMsg.innerText = 'Hire more workers';
+        actionMsg.style.background = '#fff3bf';
+        actionMsg.style.color = '#5f3dc4';
+        actionMsg.style.borderColor = '#5f3dc4';
+    } else {
+        actionMsg.innerText = 'Hire fewer workers';
+        actionMsg.style.background = '#fff5f5';
+        actionMsg.style.color = '#c92a2a';
+        actionMsg.style.borderColor = '#c92a2a';
+    }
+}
+
+function init() {
+    setupCharts();
+    document.getElementById('Labor').addEventListener('input', update);
+    update();
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
