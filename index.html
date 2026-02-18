@@ -462,7 +462,7 @@ input[type=range]:focus-visible::-moz-range-thumb {
 
 <div class="header">
 <h1>🍦 Scoop-Master Simulator</h1>
-<div class="title-equation">Y = A × (zK)<sup>(1-α)</sup> × L<sup>α</sup></div>
+<div class="title-equation">Y = A × (zK)<sup>α</sup> × L<sup>(1-α)</sup></div>
 </div>
 
 <div class="main-layout">
@@ -472,7 +472,7 @@ input[type=range]:focus-visible::-moz-range-thumb {
 <h2>Fixed Production Parameters</h2>
 <div class="param-row"><span>Machines (<span class="overbar">K</span>)</span><strong id="valK">60</strong></div>
 <div class="param-row"><span>Scoopers (<span class="overbar">L</span>)</span><strong id="valL">80</strong></div>
-<div class="param-row"><span>Labor Share (α)</span><strong id="valAlpha">0.30</strong></div>
+<div class="param-row"><span>Capital Share (α)</span><strong id="valAlpha">0.33</strong></div>
 <div class="param-row"><span>Scale Productivity (A)</span><strong id="valA">100</strong></div>
 <div class="param-row"><span>AI Capital Multiplier (z)</span><strong id="valZ">1.00</strong></div>
 </div>
@@ -550,7 +550,7 @@ input[type=range]:focus-visible::-moz-range-thumb {
 
 <script>
 let chartL, chartK;
-const FIXED = { K: 60, baseL: 80, alpha: 0.3, A: 100, z: 1 };
+const FIXED = { K: 60, baseL: 80, alpha: 1 / 3, A: 100, z: 1 };
 let scenarioMode = "baseline";
 let baselineSnapshot = null;
 
@@ -652,8 +652,8 @@ function getState(){
     const w=+Wage.value;
     const r=+Rent.value;
 
-    const Y=A*zTerm*Math.pow(K,1-a)*Math.pow(L,a);
-    const MPL=a*A*zTerm*Math.pow(K,1-a)*Math.pow(L,a-1);
+    const Y=A*zTerm*Math.pow(K,a)*Math.pow(L,1-a);
+    const MPL=(1-a)*A*zTerm*Math.pow(K,a)*Math.pow(L,-a);
     const MPK=(1-a)*A*zTerm*Math.pow(K,-a)*Math.pow(L,a);
     const equilibrium = Math.abs(w-MPL)<2 && Math.abs(r-MPK)<2;
 
@@ -710,9 +710,9 @@ function update(){
     const baseA = FIXED.A;
     const baseZTerm = Math.pow(FIXED.z, 1-a);
     for(let i=1;i<=150;i++){
-        dL.push({x:i,y:a*A*zTerm*Math.pow(K,1-a)*Math.pow(i,a-1)});
+        dL.push({x:i,y:(1-a)*A*zTerm*Math.pow(K,a)*Math.pow(i,-a)});
         dK.push({x:i,y:(1-a)*A*zTerm*Math.pow(i,-a)*Math.pow(L,a)});
-        dLBase.push({x:i,y:a*baseA*baseZTerm*Math.pow(K,1-a)*Math.pow(i,a-1)});
+        dLBase.push({x:i,y:(1-a)*baseA*baseZTerm*Math.pow(K,a)*Math.pow(i,-a)});
         dKBase.push({x:i,y:(1-a)*baseA*baseZTerm*Math.pow(i,-a)*Math.pow(baseL,a)});
     }
 
